@@ -1,0 +1,28 @@
+{
+  "name": "charityapp",
+  "version": "1.0.0",
+  "description": "App for Charity",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Apptunix",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "connect-flash": "^0.1.1",
+    "dotenv": "^8.1.0",
+    "ejs": "^2.6.2",
+    "express": "^4.17.1",
+    "express-session": "^1.16.2",
+    "express-validator": "^6.1.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.6.11",
+    "morgan": "^1.9.1",
+    "nodemailer": "^6.3.0",
+    "nodemailer-sendgrid-transport": "^0.2.0",
+    "session": "^0.1.0"
+  }
+}
