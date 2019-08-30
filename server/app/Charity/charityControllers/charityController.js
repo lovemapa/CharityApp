@@ -2,7 +2,6 @@ class charity {
     signUp() {
         return new Promise((resolve, reject) => {
 
-
         })
 
     }

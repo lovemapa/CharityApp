@@ -7,8 +7,9 @@ let charityRoute = express.Router()
 
 
 charityRoute.route('/signup')
-    .post((req, res) => {
+    .get((req, res) => {
 
+        res.render('signUp', { title: 'Forget password' })
         charityController.signUp(req.body).then(result => {
             return res.json({
                 success: CONSTANT.TRUE,
