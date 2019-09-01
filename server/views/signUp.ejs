@@ -14,17 +14,30 @@
             margin: 10px auto;
             width: 500px;
         }
+        .registration {
+	
+	color: red;
+    font-size:42px; 
+	
+	margin-left: 415px
+  	
+	
+}
     </style>
     <title><%= title %></title>
+    <%  if(status===1){ %>
+        <div class="registration">Registration Successfull</div>                                                                                  
+         <% } %>
 </head>
 
 <body>
+      
     <div id="logreg-forms">
         <form class="form-signin mt-5" method="POST">
             <h1 class="h3 mb-3 font-weight-normal" style="text-align: center">
                 Charity Form
             </h1>
-
+        
             <input type="text" class="form-control" placeholder="Name of NGO/Organization" required="" autofocus=""
                 name="organization" /><br />
             <input type="text" class="form-control" placeholder="Address" required="" name="address" /><br>
@@ -34,8 +47,16 @@
             <br>
             <input type="text" class="form-control" placeholder="Social Media details" required="" name="socialmedia" />
             <br>
-            <input type="text" class="form-control" placeholder="Authentication Documents" required=""
-                name="confirmpassword" />
+            <label>Authentication Documents</label>
+            <input  type="file" placeholder=" image" name="file"  class="form-control" aria-required="true" aria-invalid="false" required > 
+            <br>
+            <label>Profession</label>
+            <select name="profession">
+                    <% var row = ['Working','Business']; %>
+                    <% row.forEach(function(row){ %>
+                        <option value="<%= row %>"><%= row %></option>
+                        <% }) %>
+                  </select>
             <br>
             <input type="text" class="form-control" placeholder="Monthly Earning" required="" name="earning" />
             <br>
@@ -46,10 +67,10 @@
             <input type="text" class="form-control" placeholder="Any References" required="" name="references" />
             <br>
 
-            <button class="btn btn-success btn-block" type="submit">Change Password</button>
-
+            <button class="btn btn-success btn-block" formaction="/charity/charity/register" type="submit">Charity Registration</button>
+          
             <hr />
-            <!-- <p>Don't have an account!</p>  -->
+           
         </form>
 
         <br />
@@ -59,6 +80,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
+  
 </body>
 
 </html>

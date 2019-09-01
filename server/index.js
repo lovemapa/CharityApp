@@ -10,7 +10,9 @@ const session = require('express-session')
 const app = new express();
 
 
+
 dotenv.config();
+app.use(express.static(path.join(process.cwd() + "/public/uploads/")));
 app.use(session({
     secret: 'user_id',
     resave: true,
