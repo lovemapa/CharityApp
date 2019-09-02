@@ -37,6 +37,18 @@ class commonController {
     }
     sendMail(email, _id, token, cb) {
 
+        var html, subject
+        if (_id == undefined || token == undefined) {
+            subject = 'Account Activation'
+            html = `<p> Dear ${email} Your Account is activated.Your password for future reference will be <b>${token}</b>.<br> Thank you</p>`
+        }
+        else {
+            subject = 'Request for Change Password'
+            html = `<p><a href='http://localhost:8004/charity/user/forgetpassword/?token=${token}&user=${_id}'>click here to change password</a></p>`
+
+        }
+
+        // console.log(email, _id, token, html);
         var smtpConfig = {
             host: 'smtp.gmail.com',
             port: 465,
@@ -50,8 +62,8 @@ class commonController {
         const mailOptions = {
             from: 'pk1605199432@gmail.com', // sender address
             to: email, // list of receivers
-            subject: 'Request for Change Password', // Subject line
-            html: `<p><a href='http://localhost:8004/charity/user/forgetpassword/?token=${token}&user=${_id}'>click here to change password</a></p>`,
+            subject: subject, // Subject line
+            html: html,
         };
         transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
