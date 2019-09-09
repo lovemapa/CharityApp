@@ -43,4 +43,20 @@ chatRoutes.route('/getUserList/:appId')
         })
     })
 
+chatRoutes.route('/getChatlist/:sender_id')
+    .get((req, res) => {
+        chatController.getChatlist(req.params.sender_id).then(result => {
+
+            if (result) {
+                return res.json({
+                    success: Constant.TRUE, list: result
+                })
+            }
+        }).catch(error => {
+            console.log(error)
+            return res.json({ success: Constant.FALSE, message: error })
+        })
+    })
+
+
 module.exports = chatRoutes

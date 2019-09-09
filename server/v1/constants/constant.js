@@ -19,6 +19,7 @@ let constant = {
     EXISTSMSG: 'associated with another account(Account already taken, try another)',
     PARAMSMISSING: 'Parameters Missing',
     OBJECTIDERROR: 'Provide valid user ObjectIDs',
+    PARAMSMISSINGCHATHISTORY: 'Provide both sender and reciever Id',
 
     // Uploaded 
     USERIMAGE: 'static/users/',

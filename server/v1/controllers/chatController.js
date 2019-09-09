@@ -6,6 +6,8 @@ import { log } from 'util';
 import { model } from 'mongoose';
 import userModel from '../../models/user'
 import groupModel from '../../models/group'
+import Mongoose from 'mongoose'
+import messageModel from '../../models/message'
 
 
 class chatController {
@@ -44,6 +46,60 @@ class chatController {
             userModel.find({ appId: appId }).then(result => {
                 resolve(result)
             }).catch(err => {
+                if (err.errors)
+                    return reject(helper.handleValidation(err))
+                return reject(Constant.FALSEMSG)
+            })
+        })
+    }
+
+    getChatlist(_id) {
+        return new Promise((resolve, reject) => {
+            console.log(_id);
+
+            messageModel.aggregate([
+                {
+                    $match: {
+                        $or: [
+                            { to: Mongoose.Types.ObjectId(_id) },
+                            {
+                                from: Mongoose.Types.ObjectId(_id)
+                            }
+                        ]
+                    }
+                },
+                {
+                    $lookup:
+                    {
+                        from: "users",
+                        localField: "from",
+                        foreignField: "_id",
+                        as: "users"
+                    }
+                },
+                {
+                    $lookup:
+                    {
+                        from: "groups",
+                        localField: "groupId",
+                        foreignField: "_id",
+                        as: "group"
+                    }
+                },
+                // , {
+                //     $group: {
+                //         "_id": "$from",
+                //         "data": {
+                //             $push: '$$ROOT'
+                //         }
+
+                //     }
+                // },
+            ]).then(result => {
+                resolve(result)
+            }).catch(err => {
+                console.log(err);
+
                 if (err.errors)
                     return reject(helper.handleValidation(err))
                 return reject(Constant.FALSEMSG)

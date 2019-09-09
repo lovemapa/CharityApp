@@ -19,6 +19,9 @@ module.exports = (io) => {
         soc.sendMessage(socket, io, socketInfo, room_members) //Send Message
         soc.addUsername(socket, io, socketInfo) //Add username to corresponding socketID
         soc.createRoom(socket, io, rooms, room_members)
+        soc.chatHistory(socket, io)
+        soc.userList(socket, io)
+        soc.chatList(socket, io)
 
 
     })
