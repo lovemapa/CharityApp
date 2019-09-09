@@ -14,6 +14,9 @@ let singleChatSchema = new Schema({
     type: { // image, video or text
         type: String,
     },
+    conversationId:{
+        type: Schema.Types.ObjectId, ref: 'conversation'
+    },
     is_deleted: {
         type: String, // set the flag true if deleted
         default: false

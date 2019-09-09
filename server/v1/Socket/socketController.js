@@ -2,7 +2,10 @@ import { log } from "util";
 import messageModel from '../../models/message'
 import Constant from '../constants/constant'
 import groupModel from '../../models/group'
+import conversationModel from '../../models/conversation'
+import Mongoose from 'mongoose'
 import userModel from '../../models/user'
+import conversation from "../../models/conversation";
 
 
 class socketController {
@@ -10,20 +13,65 @@ class socketController {
     // send Message
     sendMessage(socket, io, socketInfo, room_members) {
         socket.on('sendMessage', (data) => {
-            // var data = JSON.parse(message)
             if (data.messageType == 'single') { // if private chat
                 socket.username = data.username
-                const messageSchema = this.createMessageSchema(data)
-                messageSchema.save().then((result) => {
-                    console.log(socketInfo[data.to]);
-
-                    io.to(socketInfo[data.to]).emit('sendMessage', result) // send message to reciver's username
-                }).catch(error => {
-                    if ((error.name == 'ValidationError'))
-                        io.to(socketInfo[data.to]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
-                    else
-                        io.to(socketInfo[data.to]).emit('sendMessage', error)
+                conversationModel.findOne({
+                    $or: [
+                        {
+                            $and: [
+                                { sender_id: Mongoose.Types.ObjectId(data.from) },
+                                {
+                                    reciever_id:  Mongoose.Types.ObjectId(data.to)
+                                }
+                            ]
+                        },
+                        {
+                            $and: [
+                                { sender_id:  Mongoose.Types.ObjectId(data.to) },
+                                {
+                                    reciever_id:  Mongoose.Types.ObjectId(data.from)
+                                }
+                            ]
+                        }
+                    ]
                 })
+                .then(conversation=>{
+                    console.log('CONVER',conversation);
+                    
+                    if(conversation)
+                    {
+                        const messageSchema = this.createMessageSchema(data,conversation._id)
+                        messageSchema.save().then((result) => {
+                            console.log(socketInfo[data.to]);
+        
+                            io.to(socketInfo[data.to]).emit('sendMessage', result) // send message to reciver's username
+                        }).catch(error => {
+                            if ((error.name == 'ValidationError'))
+                                io.to(socketInfo[data.to]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                            else
+                                io.to(socketInfo[data.to]).emit('sendMessage', error)
+                        })
+                    }
+                    else
+                    {
+                     const conversationSchema= new conversationModel({
+                        sender_id:data.to,
+                        reciever_id:data.from
+                     })  
+                     conversationSchema.save({}).then(conversation=>{
+                        const messageSchema = this.createMessageSchema(data,conversation._id)
+                        messageSchema.save().then((result) => {
+                            io.to(socketInfo[data.to]).emit('sendMessage', result) // send message to reciver's username
+                        }).catch(error => {
+                            if ((error.name == 'ValidationError'))
+                                io.to(socketInfo[data.to]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                            else
+                                io.to(socketInfo[data.to]).emit('sendMessage', error)
+                        })
+                     })
+                    }    
+                })
+           
             }
             else {
                 const messageSchema = this.createMessageSchema(data)
@@ -122,7 +170,7 @@ class socketController {
         })
     }
     // Message Schema
-    createMessageSchema(data) {
+    createMessageSchema(data,conversation_id) {
 
         let message = new messageModel({
             message: data.message,
@@ -130,7 +178,8 @@ class socketController {
             from: data.from,
             type: data.type,
             messageType: data.messageType,
-            groupId: data.groupId
+            groupId: data.groupId,
+            conversationId:conversation_id
         })
         return message;
     }
