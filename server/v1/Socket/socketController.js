@@ -72,8 +72,8 @@ class socketController {
             else {
 
                 conversationModel.findOne({
-                    $or: [{ $and: [{ sender_id: data.from }, { reciever_id: data.to }] },
-                    { $and: [{ sender_id: data.to }, { reciever_id: data.from }] }
+                    $or: [{ $and: [{ sender_id: data.sender_id }, { reciever_id: data.reciever_id }] },
+                    { $and: [{ sender_id: data.reciever_id }, { reciever_id: data.sender_id }] }
                     ]
                 }).then(conversation => {
                     let convId = ""
