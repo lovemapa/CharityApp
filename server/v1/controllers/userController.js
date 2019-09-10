@@ -17,7 +17,7 @@ class userController {
             let user = new User({
                 firstName: data.firstName,
                 date: moment().valueOf(),
-                appId: data._id,
+                appId: data.appId,
                 lastName: data.lastName,
                 username: data.username
 

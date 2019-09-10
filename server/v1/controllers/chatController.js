@@ -86,13 +86,41 @@ class chatController {
                         as: "group"
                     }
                 },
-                // , {
-                //     $group: {
-                //         "_id": "$from",
-                //         "data": {
-                //             $push: '$$ROOT'
-                //         }
 
+                {
+                    $lookup:
+                    {
+                        from: "conversations",
+                        localField: "conversationId",
+                        foreignField: "_id",
+                        as: "conversations"
+                    }
+                },
+                {
+                    $group: {
+                        "_id": "$conversationId",
+                        // data: {
+                        //     $push: '$$ROOT'
+                        // },
+                        Chatname: { $addToSet: "$group.groupName" }
+                    }
+                },
+                { $unwind: "$Chatname" },
+                {
+                    $project: {
+
+
+                        "Chatname": 1,
+                        // Chatname: { $cond: { if: { $isArray: "$Chatname" }, then: { $cond:{if:{$gte: [{ $size: "$Chatname" }, 0] },then:}}, else: "NA" } }
+                    }
+
+                }
+
+                // {
+                //     $addFields: {
+                //         "Chatname": {
+                //             _id: "$data.group.groupName",
+                //         }
                 //     }
                 // },
             ]).then(result => {

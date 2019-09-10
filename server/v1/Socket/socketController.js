@@ -13,77 +13,27 @@ class socketController {
     // send Message
     sendMessage(socket, io, socketInfo, room_members) {
         socket.on('sendMessage', (data) => {
-            if (data.messageType == 'single') { // if private chat
-                socket.username = data.username
-                conversationModel.findOne({
-                    $or: [
-                        {
-                            $and: [
-                                { sender_id: Mongoose.Types.ObjectId(data.from) },
-                                {
-                                    reciever_id:  Mongoose.Types.ObjectId(data.to)
-                                }
-                            ]
-                        },
-                        {
-                            $and: [
-                                { sender_id:  Mongoose.Types.ObjectId(data.to) },
-                                {
-                                    reciever_id:  Mongoose.Types.ObjectId(data.from)
-                                }
-                            ]
-                        }
-                    ]
-                })
-                .then(conversation=>{
-                    console.log('CONVER',conversation);
-                    
-                    if(conversation)
-                    {
-                        const messageSchema = this.createMessageSchema(data,conversation._id)
-                        messageSchema.save().then((result) => {
-                            console.log(socketInfo[data.to]);
-        
-                            io.to(socketInfo[data.to]).emit('sendMessage', result) // send message to reciver's username
-                        }).catch(error => {
-                            if ((error.name == 'ValidationError'))
-                                io.to(socketInfo[data.to]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
-                            else
-                                io.to(socketInfo[data.to]).emit('sendMessage', error)
-                        })
-                    }
-                    else
-                    {
-                     const conversationSchema= new conversationModel({
-                        sender_id:data.to,
-                        reciever_id:data.from
-                     })  
-                     conversationSchema.save({}).then(conversation=>{
-                        const messageSchema = this.createMessageSchema(data,conversation._id)
-                        messageSchema.save().then((result) => {
-                            io.to(socketInfo[data.to]).emit('sendMessage', result) // send message to reciver's username
-                        }).catch(error => {
-                            if ((error.name == 'ValidationError'))
-                                io.to(socketInfo[data.to]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
-                            else
-                                io.to(socketInfo[data.to]).emit('sendMessage', error)
-                        })
-                     })
-                    }    
-                })
-           
-            }
-            else {
-                const messageSchema = this.createMessageSchema(data)
-                messageSchema.save().then((result) => {
-                    io.in(data.groupId).emit('createRoom', { success: Constant.TRUE, result: result }); //emit to all in room including sender
-                }).catch(error => {
-                    if ((error.name == 'ValidationError'))
-                        io.to(socketInfo[data.username]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
-                    else
-                        io.to(socketInfo[data.username]).emit('sendMessage', error)
-                })
-            }
+            console.log(data, 'send message');
+
+            socket.username = data.username
+
+
+            const messageSchema = this.createMessageSchema(data, data.conversationId)
+
+            messageSchema.save().then((result) => {
+
+                io.in(data.conversationId).emit('sendMessage', { success: Constant.TRUE, result: result }); //emit to all in room including sender
+
+            }).catch(error => {
+
+                if ((error.name == 'ValidationError'))
+                    io.to(socketInfo[data.username]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                else
+                    io.to(socketInfo[data.username]).emit('sendMessage', error)
+            })
+
+
+
         })
     }
 
@@ -100,8 +50,7 @@ class socketController {
     }
 
     createRoom(socket, io, rooms, room_members) {
-        socket.on('createRoom', (room) => {
-            var data = JSON.parse(room)
+        socket.on('createRoom', (data) => {
             socket.join(data.room, function () {
                 //==>    Object.keys(io.sockets.adapter.rooms[data.room].sockets).length    For finding numbers of clients
                 //  connected in a room 
@@ -112,43 +61,49 @@ class socketController {
         })
     }
 
-    chatHistory(socket, io, rooms) {
-        socket.on('chatHistory', (history) => {
-            console.log('chatHistory==', history);
-            var data = JSON.parse(history)
 
+    chatHistory(socket, io, room_members) {
+        socket.on('chatHistory', (data) => {
+
+            console.log('chatHistory==', data);
             if (!data.sender_id && !data.reciever_id) {
                 io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGCHATHISTORY });
             }
             else {
-                messageModel.find({
-                    $or: [
-                        {
-                            $and: [
-                                { to: data.sender_id },
-                                {
-                                    from: data.reciever_id
-                                }
-                            ]
-                        },
-                        {
-                            $and: [
-                                { to: data.reciever_id },
-                                {
-                                    from: data.sender_id
-                                }
-                            ]
-                        }
-                    ]
-                }).then(result => {
-                    io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result });
-                }).catch(err => {
-                    if (err.name == 'ValidationError' || 'CastError')
-                        io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
-                    else
-                        io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: err });
-                })
 
+                conversationModel.findOne({
+                    $or: [{ $and: [{ sender_id: data.from }, { reciever_id: data.to }] },
+                    { $and: [{ sender_id: data.to }, { reciever_id: data.from }] }
+                    ]
+                }).then(conversation => {
+                    let convId = ""
+                    if (conversation) {
+                        convId = conversation._id
+                    } else {
+                        const conversationSchema = new conversationModel({
+                            sender_id: data.to,
+                            reciever_id: data.from
+                        })
+                        convId = conversationSchema._id
+                        conversationSchema.save({}).exec()
+                    }
+
+                    socket.join(convId, function () {
+                        room_members[convId] = io.sockets.adapter.rooms[convId].sockets
+                        console.log('room_members===', room_members);
+                    })
+
+                    messageModel.find({ conversationId: convId }).populate('from to').then(result => {
+
+                        io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
+                    }).catch(err => {
+
+                        if (err.name == 'ValidationError' || 'CastError')
+                            io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                        else
+                            io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: err });
+                    })
+                })
             }
         })
     }
@@ -159,8 +114,10 @@ class socketController {
         })
     }
     userList(socket, io) {
-        socket.on('userList', users => {
-            userModel.find({}).
+        socket.on('userList', userId => {
+            console.log(userId.senderId);
+
+            userModel.find({ _id: { $ne: userId.senderId } }).
                 then(users => {
                     io.to(socket.id).emit('userList', { success: Constant.TRUE, users: users, message: Constant.TRUEMSG })
                 })
@@ -170,8 +127,9 @@ class socketController {
         })
     }
     // Message Schema
-    createMessageSchema(data,conversation_id) {
-
+    createMessageSchema(data, conversation_id) {
+        if (data.messageType == 'group')
+            var conversation_id = data.groupId
         let message = new messageModel({
             message: data.message,
             to: data.to,
@@ -179,7 +137,7 @@ class socketController {
             type: data.type,
             messageType: data.messageType,
             groupId: data.groupId,
-            conversationId:conversation_id
+            conversationId: conversation_id
         })
         return message;
     }
