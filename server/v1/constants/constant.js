@@ -20,6 +20,7 @@ let constant = {
     PARAMSMISSING: 'Parameters Missing',
     OBJECTIDERROR: 'Provide valid user ObjectIDs',
     PARAMSMISSINGCHATHISTORY: 'Provide both sender and reciever Id',
+    PARAMSMISSINGGROUPCHATHISTORY: 'Provide sender Id',
 
     // Uploaded 
     USERIMAGE: 'static/users/',

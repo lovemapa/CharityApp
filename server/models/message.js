@@ -14,11 +14,11 @@ let singleChatSchema = new Schema({
     type: { // image, video or text
         type: String,
     },
-    conversationId:{
+    conversationId: {
         type: Schema.Types.ObjectId, ref: 'conversation'
     },
     is_deleted: {
-        type: String, // set the flag true if deleted
+        type: Boolean, // set the flag true if deleted
         default: false
     },
     messageType: {
@@ -26,6 +26,9 @@ let singleChatSchema = new Schema({
     },
     groupId: {
         type: Schema.Types.ObjectId, ref: 'groups' // groupId
+    },
+    date: {
+        type: Number,
     },
     readBy: [{
         type: Schema.Types.ObjectId, ref: 'user' //user ids of all who has read the message

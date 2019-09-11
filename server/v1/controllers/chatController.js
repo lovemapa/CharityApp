@@ -20,7 +20,8 @@ class chatController {
 
                 const groupSchema = new groupModel({
                     members: data.userArray,
-                    groupName: data.groupName
+                    groupName: data.groupName,
+                    date: moment().valueOf()
                 })
                 groupSchema.save().then(group => { resolve(group) }).catch((error) => {
 
@@ -53,85 +54,115 @@ class chatController {
         })
     }
 
-    getChatlist(_id) {
+    getChatlist(id) {
         return new Promise((resolve, reject) => {
-            console.log(_id);
+            console.log(id);
+            var IDs = [];
+            groupModel.find({ members: id }).then(groupMembers => {
+                groupMembers.map(value => {
 
-            messageModel.aggregate([
-                {
-                    $match: {
-                        $or: [
-                            { to: Mongoose.Types.ObjectId(_id) },
-                            {
-                                from: Mongoose.Types.ObjectId(_id)
-                            }
-                        ]
-                    }
-                },
-                {
-                    $lookup:
+                    IDs.push(Mongoose.Types.ObjectId(value._id))
+                })
+                console.log(IDs);
+
+                messageModel.aggregate([
                     {
-                        from: "users",
-                        localField: "from",
-                        foreignField: "_id",
-                        as: "users"
-                    }
-                },
-                {
-                    $lookup:
+                        $match: {
+                            $or: [
+                                { to: Mongoose.Types.ObjectId(id) },
+                                {
+                                    from: Mongoose.Types.ObjectId(id)
+                                },
+                                {
+
+                                    groupId: { $in: IDs }
+
+                                }
+                            ]
+                        }
+                    },
                     {
-                        from: "groups",
-                        localField: "groupId",
-                        foreignField: "_id",
-                        as: "group"
-                    }
-                },
+                        $lookup:
+                        {
+                            from: "users",
+                            localField: "to",
+                            foreignField: "_id",
+                            as: "to"
+                        }
+                    },
 
-                {
-                    $lookup:
                     {
-                        from: "conversations",
-                        localField: "conversationId",
-                        foreignField: "_id",
-                        as: "conversations"
+                        $lookup:
+                        {
+                            from: "users",
+                            localField: "from",
+                            foreignField: "_id",
+                            as: "from"
+                        }
+                    },
+                    {
+                        $lookup:
+                        {
+                            from: "groups",
+                            localField: "groupId",
+                            foreignField: "_id",
+                            as: "group"
+                        }
+                    },
+                    // { $unwind: "$sender" },
+                    // { $unwind: "$group" },
+                    // { $unwind: "$reciever" },
+                    {
+                        $group: {
+                            "_id": "$conversationId",
+                            "messageId": { $last: "$_id" },
+                            "type": { $first: "$type" },
+                            "message": { $last: "$message" },
+                            "group": { $last: { $arrayElemAt: ["$group", 0] } },
+                            "to": { $last: { $arrayElemAt: ["$to", 0] } },
+                            "from": { $last: { $arrayElemAt: ["$from", 0] } },
+                            "conversationId": { $first: "$conversationId" },
+                            unreadCount: { $sum: 1 } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
+
+
+                        }
+                    },
+
+
+                    {
+                        $project: {
+
+
+                            "_id": 0,
+                            "messageId": 1,
+                            "messageType": 1,
+                            "message": 1,
+                            "group": {
+                                $cond: { if: "$group", then: "$group", else: {} }
+                            },
+                            "sender": 1,
+                            "to": { $cond: { if: "$to", then: "$to", else: {} } },
+                            "from": 1,
+                            unreadCount: 1,
+                            chatName: { $cond: { if: "$group", then: "$group", else: { $cond: { if: { $eq: ["$from._id", "id"] }, then: "$to", else: "$from" } } } }
+                            // { $cond: { if: { $gt: [{ $size: "$Chatname" }, 0] }, then: 1, else: 0 } }, else: "NA" } }
+                        }
+
                     }
-                },
-                {
-                    $group: {
-                        "_id": "$conversationId",
-                        // data: {
-                        //     $push: '$$ROOT'
-                        // },
-                        Chatname: { $addToSet: "$group.groupName" }
-                    }
-                },
-                { $unwind: "$Chatname" },
-                {
-                    $project: {
+                ]).then(result => {
+                    resolve(result)
+                }).catch(err => {
+                    console.log(err);
 
-
-                        "Chatname": 1,
-                        // Chatname: { $cond: { if: { $isArray: "$Chatname" }, then: { $cond:{if:{$gte: [{ $size: "$Chatname" }, 0] },then:}}, else: "NA" } }
-                    }
-
-                }
-
-                // {
-                //     $addFields: {
-                //         "Chatname": {
-                //             _id: "$data.group.groupName",
-                //         }
-                //     }
-                // },
-            ]).then(result => {
-                resolve(result)
-            }).catch(err => {
-                console.log(err);
-
-                if (err.errors)
-                    return reject(helper.handleValidation(err))
-                return reject(Constant.FALSEMSG)
+                    if (err.errors)
+                        return reject(helper.handleValidation(err))
+                    return reject(Constant.FALSEMSG)
+                })
             })
+
+
+
+
         })
     }
 

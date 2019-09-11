@@ -6,6 +6,7 @@ import conversationModel from '../../models/conversation'
 import Mongoose from 'mongoose'
 import userModel from '../../models/user'
 import conversation from "../../models/conversation";
+import moment from 'moment'
 
 
 class socketController {
@@ -21,8 +22,9 @@ class socketController {
             const messageSchema = this.createMessageSchema(data, data.conversationId)
 
             messageSchema.save().then((result) => {
-
-                io.in(data.conversationId).emit('sendMessage', { success: Constant.TRUE, result: result }); //emit to all in room including sender
+                messageModel.populate(messageSchema, { path: "to from" }, function (err, data) {
+                    io.in(data.conversationId).emit('sendMessage', { success: Constant.TRUE, result: data }); //emit to all in room including sender
+                })
 
             }).catch(error => {
 
@@ -64,16 +66,17 @@ class socketController {
 
     chatHistory(socket, io, room_members) {
         socket.on('chatHistory', (data) => {
-
-            console.log('chatHistory==', data);
-            if (!data.sender_id && !data.reciever_id) {
+            console.log(data);
+            // console.log('chatHistory==', data);
+            if (!data.opponentId && !data.userId) {
                 io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGCHATHISTORY });
             }
             else {
 
+
                 conversationModel.findOne({
-                    $or: [{ $and: [{ sender_id: data.sender_id }, { reciever_id: data.reciever_id }] },
-                    { $and: [{ sender_id: data.reciever_id }, { reciever_id: data.sender_id }] }
+                    $or: [{ $and: [{ sender_id: data.opponentId }, { reciever_id: data.userId }] },
+                    { $and: [{ sender_id: data.userId }, { reciever_id: data.opponentId }] }
                     ]
                 }).then(conversation => {
                     let convId = ""
@@ -81,36 +84,64 @@ class socketController {
                         convId = conversation._id
                     } else {
                         const conversationSchema = new conversationModel({
-                            sender_id: data.to,
-                            reciever_id: data.from
+                            sender_id: data.opponentId,
+                            reciever_id: data.userId
                         })
+
                         convId = conversationSchema._id
-                        conversationSchema.save({}).exec()
+                        console.log(convId);
+                        conversationSchema.save({}).then()
                     }
+                    messageModel.update({ conversationId: convId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(
+                        update => {
+                            socket.join(convId, function () {
+                                room_members[convId] = io.sockets.adapter.rooms[convId].sockets
+                                console.log('room_members===', room_members);
+                            })
 
-                    socket.join(convId, function () {
-                        room_members[convId] = io.sockets.adapter.rooms[convId].sockets
-                        console.log('room_members===', room_members);
-                    })
+                            messageModel.find({ conversationId: convId }).populate('from to').then(result => {
 
-                    messageModel.find({ conversationId: convId }).populate('from to').then(result => {
+                                io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
+                            }).catch(err => {
 
-                        io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
-                    }).catch(err => {
+                                if (err.name == 'ValidationError' || 'CastError')
+                                    io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                                else
+                                    io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: err });
+                            })
+                        }
+                    )
 
-                        if (err.name == 'ValidationError' || 'CastError')
-                            io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
-                        else
-                            io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: err });
-                    })
                 })
             }
         })
     }
 
-    chatList(socket, io) {
-        socket.on('chatList', list => {
+    groupChatHistory(socket, io, room_members) {
+        socket.on('groupChatHistory', data => {
+            if (!data.userId) {
+                io.to(socket.id).emit('groupChatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGGROUPCHATHISTORY });
+            }
+            else {
 
+                messageModel.update({ group_id: data.groupId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(conversation => {
+    
+                    socket.join(data.groupId, function () {
+                        room_members[data.groupId] = io.sockets.adapter.rooms[data.groupId].sockets
+                    })
+
+                    messageModel.find({ conversationId: data.groupId }).populate('from').then(result => {
+
+                        io.to(socket.id).emit('groupChatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
+                    }).catch(err => {
+
+                        if (err.name == 'ValidationError' || 'CastError')
+                            io.to(socket.id).emit('groupChatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                        else
+                            io.to(socket.id).emit('groupChatHistory', { success: Constant.FALSE, message: err });
+                    })
+                })
+            }
         })
     }
     userList(socket, io) {
@@ -137,7 +168,9 @@ class socketController {
             type: data.type,
             messageType: data.messageType,
             groupId: data.groupId,
-            conversationId: conversation_id
+            conversationId: conversation_id,
+            date: moment().valueOf(),
+            readBy: data.from
         })
         return message;
     }
