@@ -120,7 +120,7 @@ class chatController {
                             "to": { $last: { $arrayElemAt: ["$to", 0] } },
                             "from": { $last: { $arrayElemAt: ["$from", 0] } },
                             "conversationId": { $first: "$conversationId" },
-                            unreadCount: { $sum: { $cond: [{ $eq: [id, "$readBy"] }, 1, 0] } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
+                            unreadCount: { $sum: { $cond: { if: { $in: [Mongoose.Types.ObjectId(id), "$readBy"] }, then: 0, else: 1 } } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
 
 
                         }
@@ -135,10 +135,10 @@ class chatController {
                             "messageId": 1,
                             "messageType": 1,
                             "message": 1,
-                            "from_id": id,
                             "group": {
                                 $cond: { if: "$group", then: "$group", else: {} }
                             },
+                            "unread": "$readBy",
                             "sender": 1,
                             "to": { $cond: { if: "$to", then: "$to", else: {} } },
                             "from": 1,

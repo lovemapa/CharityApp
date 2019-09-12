@@ -229,7 +229,7 @@ class socketController {
                             "to": { $last: { $arrayElemAt: ["$to", 0] } },
                             "from": { $last: { $arrayElemAt: ["$from", 0] } },
                             "conversationId": { $first: "$conversationId" },
-                            unreadCount: { $sum: { $cond: [{ $eq: [id, "$readBy"] }, 1, 0] } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
+                            unreadCount: { $sum: { $cond: { if: { $in: [Mongoose.Types.ObjectId(id), "$readBy"] }, then: 0, else: 1 } } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
 
 
                         }
