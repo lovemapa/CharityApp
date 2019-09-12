@@ -23,6 +23,7 @@ module.exports = (io) => {
         soc.userList(socket, io)
         soc.chatList(socket, io)
         soc.typing(socket, io)
+        soc.isRead(socket, io, socketInfo)
         soc.groupChatHistory(socket, io, room_members)
 
 

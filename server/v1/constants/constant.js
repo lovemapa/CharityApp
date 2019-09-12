@@ -18,6 +18,7 @@ let constant = {
     GROUPCREATESUCCESS: 'Group has been created succesffuly',
     EXISTSMSG: 'associated with another account(Account already taken, try another)',
     PARAMSMISSING: 'Parameters Missing',
+    PARAMSGROUPMISSING: `Provide group ID`,
     OBJECTIDERROR: 'Provide valid user ObjectIDs',
     PARAMSMISSINGCHATHISTORY: 'Provide both sender and reciever Id',
     PARAMSMISSINGGROUPCHATHISTORY: 'Provide sender Id',

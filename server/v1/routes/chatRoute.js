@@ -58,5 +58,20 @@ chatRoutes.route('/getChatlist/:sender_id')
         })
     })
 
+chatRoutes.route('/addMember')
+    .patch((req, res) => {
+        chatController.addMember(req.body).then(result => {
+
+            if (result) {
+                return res.json({
+                    success: Constant.TRUE, message: Constant.UPDATEMSG
+                })
+            }
+        }).catch(error => {
+            console.log(error)
+            return res.json({ success: Constant.FALSE, message: error })
+        })
+    })
+
 
 module.exports = chatRoutes

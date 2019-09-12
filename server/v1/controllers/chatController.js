@@ -15,21 +15,39 @@ class chatController {
     // Create Group
     createGroup(data) {
         return new Promise((resolve, reject) => {
-            if (data.groupName && data.userArray) {
+            if (data.groupName && data.userArray && data.createdBy) {
                 console.log(data);
 
                 const groupSchema = new groupModel({
                     members: data.userArray,
                     groupName: data.groupName,
+                    createdBy: data.createdBy,
                     date: moment().valueOf()
                 })
-                groupSchema.save().then(group => { resolve(group) }).catch((error) => {
+                groupSchema.save().then(group => {
+                    console.log(group);
 
-                    if ((error.name == 'ValidationError'))
-                        reject(Constant.OBJECTIDERROR)
+                    const message = new messageModel({
+                        message: '',
+                        from: group.createdBy,
+                        messageType: 'group',
+                        type: 'text',
+                        groupId: group._id
+                    })
+                    message.save().then(save => {
+                    })
 
-                    reject(Constant.OBJECTIDERROR)
+                    resolve(group)
                 })
+
+
+                    .catch((error) => {
+
+                        if ((error.name == 'ValidationError'))
+                            reject(Constant.OBJECTIDERROR)
+
+                        reject(Constant.OBJECTIDERROR)
+                    })
             }
             else {
                 reject(Constant.PARAMSMISSING)
@@ -54,6 +72,25 @@ class chatController {
         })
     }
 
+    addMember(data) {
+        return new Promise((resolve, reject) => {
+            if (!data.groupId && !data.userId)
+                reject(Constant.PARAMSMISSING)
+            else {
+                groupModel.updateOne({ _id: data.groupId }, { $addToSet: { members: data.userId } }).then(result => {
+                    console.log(result);
+
+                    resolve(Constant.TRUE)
+                }).catch(err => {
+                    if (err.errors)
+                        return reject(helper.handleValidation(err))
+                    return reject(Constant.FALSEMSG)
+                })
+            }
+        })
+
+    }
+
     getChatlist(id) {
         return new Promise((resolve, reject) => {
             console.log(id);
@@ -63,6 +100,8 @@ class chatController {
 
                     IDs.push(Mongoose.Types.ObjectId(value._id))
                 })
+                console.log(IDs);
+
                 messageModel.aggregate([
                     {
                         $match: {

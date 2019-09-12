@@ -284,6 +284,18 @@ class socketController {
 
         })
     }
+
+    isRead(socket, io, socketInfo) {
+        socket.on('isRead', data => {
+            if (!data.opponentId && !data.conversationId)
+                io.to(socket.id).emit('isRead', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
+            else {
+                messageModel.update({ conversationId: convId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(updateResult => {
+                    io.to(socketInfo[data.opponentId]).emit('isRead', { success: Constant.TRUE })
+                })
+            }
+        })
+    }
     // Message Schema
     createMessageSchema(data, conversation_id) {
         if (data.messageType == 'group')
