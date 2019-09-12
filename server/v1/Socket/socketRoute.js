@@ -22,6 +22,7 @@ module.exports = (io) => {
         soc.chatHistory(socket, io, room_members)
         soc.userList(socket, io)
         soc.chatList(socket, io)
+        soc.typing(socket, io)
         soc.groupChatHistory(socket, io, room_members)
 
 

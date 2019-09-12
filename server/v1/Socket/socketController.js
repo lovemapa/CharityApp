@@ -21,11 +21,15 @@ class socketController {
             messageSchema.save().then((result) => {
                 messageModel.populate(messageSchema, { path: "to from" }, function (err, data) {
                     if (data.messageType == 'single')
-                        io.to(socketInfo[data.from]).emit('listenMessage', { success: Constant.TRUE, result: data })
+                        io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: data })
                     else {
                         groupModel.findOne({ _id: data.groupId }).then(result => {
                             result.members.map(value => {
-                                io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: data })
+
+                                if (String(value) != String(data.from._id)) {
+
+                                    io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: data })
+                                }
                             })
                         })
                     }
@@ -271,6 +275,13 @@ class socketController {
 
                 })
             })
+        })
+    }
+
+    typing(socket, io) {
+        socket.on('typing', data => {
+            io.to(socket.id).emit('typing', { success: Constant.TRUE })
+
         })
     }
     // Message Schema
