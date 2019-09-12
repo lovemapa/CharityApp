@@ -21,6 +21,7 @@ module.exports = (io) => {
         soc.createRoom(socket, io, rooms, room_members)
         soc.chatHistory(socket, io, room_members)
         soc.userList(socket, io)
+        soc.chatList(socket, io)
         soc.groupChatHistory(socket, io, room_members)
 
 

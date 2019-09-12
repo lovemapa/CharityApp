@@ -125,7 +125,7 @@ class socketController {
             else {
 
                 messageModel.update({ group_id: data.groupId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(conversation => {
-    
+
                     socket.join(data.groupId, function () {
                         room_members[data.groupId] = io.sockets.adapter.rooms[data.groupId].sockets
                     })
@@ -155,6 +155,116 @@ class socketController {
                 .catch(error => {
                     io.to(socket.id).emit('userList', { success: Constant.FALSE, message: error })
                 })
+        })
+    }
+
+    chatList(socket, io) {
+        socket.on('chatList', data => {
+            var id = data.userId
+            if (!id) {
+                io.to(socket.id).emit('chatList', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
+
+            }
+            console.log(data.userId);
+            var IDs = [];
+            groupModel.find({ members: id }).then(groupMembers => {
+                groupMembers.map(value => {
+
+                    IDs.push(Mongoose.Types.ObjectId(value._id))
+                })
+                messageModel.aggregate([
+                    {
+                        $match: {
+                            $or: [
+                                { to: Mongoose.Types.ObjectId(id) },
+                                {
+                                    from: Mongoose.Types.ObjectId(id)
+                                },
+                                {
+
+                                    groupId: { $in: IDs }
+
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $lookup:
+                        {
+                            from: "users",
+                            localField: "to",
+                            foreignField: "_id",
+                            as: "to"
+                        }
+                    },
+
+                    {
+                        $lookup:
+                        {
+                            from: "users",
+                            localField: "from",
+                            foreignField: "_id",
+                            as: "from"
+                        }
+                    },
+                    {
+                        $lookup:
+                        {
+                            from: "groups",
+                            localField: "groupId",
+                            foreignField: "_id",
+                            as: "group"
+                        }
+                    },
+                    // { $unwind: "$sender" },
+                    // { $unwind: "$group" },
+                    // { $unwind: "$reciever" },
+                    {
+                        $group: {
+                            "_id": "$conversationId",
+                            "messageId": { $last: "$_id" },
+                            "type": { $first: "$type" },
+                            "message": { $last: "$message" },
+                            "group": { $last: { $arrayElemAt: ["$group", 0] } },
+                            "to": { $last: { $arrayElemAt: ["$to", 0] } },
+                            "from": { $last: { $arrayElemAt: ["$from", 0] } },
+                            "conversationId": { $first: "$conversationId" },
+                            unreadCount: { $sum: { $cond: [{ $eq: [id, "$readBy"] }, 1, 0] } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
+
+
+                        }
+                    },
+
+
+                    {
+                        $project: {
+
+
+                            "_id": 0,
+                            "messageId": 1,
+                            "messageType": 1,
+                            "message": 1,
+                            "group": {
+                                $cond: { if: "$group", then: "$group", else: {} }
+                            },
+                            "sender": 1,
+                            "to": { $cond: { if: "$to", then: "$to", else: {} } },
+                            "from": 1,
+                            unreadCount: 1,
+                            chatName: { $cond: { if: "$group", then: "$group", else: { $cond: { if: { $eq: ["$from._id", Mongoose.Types.ObjectId(id)] }, then: "$to", else: "$from" } } } }
+                            // { $cond: { if: { $gt: [{ $size: "$Chatname" }, 0] }, then: 1, else: 0 } }, else: "NA" } }
+                        }
+
+                    }
+                ]).then(result => {
+                    io.to(socket.id).emit('chatList', { success: Constant.TRUE, chatList: result, message: Constant.TRUEMSG })
+                }).catch(err => {
+
+                    if (err)
+                        io.to(socket.id).emit('chatList', { success: Constant.FALSE, message: err })
+
+                })
+            })
         })
     }
     // Message Schema

@@ -63,8 +63,6 @@ class chatController {
 
                     IDs.push(Mongoose.Types.ObjectId(value._id))
                 })
-                console.log(IDs);
-
                 messageModel.aggregate([
                     {
                         $match: {
@@ -122,7 +120,7 @@ class chatController {
                             "to": { $last: { $arrayElemAt: ["$to", 0] } },
                             "from": { $last: { $arrayElemAt: ["$from", 0] } },
                             "conversationId": { $first: "$conversationId" },
-                            unreadCount: { $sum: 1 } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
+                            unreadCount: { $sum: { $cond: [{ $eq: [id, "$readBy"] }, 1, 0] } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
 
 
                         }
@@ -137,6 +135,7 @@ class chatController {
                             "messageId": 1,
                             "messageType": 1,
                             "message": 1,
+                            "from_id": id,
                             "group": {
                                 $cond: { if: "$group", then: "$group", else: {} }
                             },
@@ -144,7 +143,7 @@ class chatController {
                             "to": { $cond: { if: "$to", then: "$to", else: {} } },
                             "from": 1,
                             unreadCount: 1,
-                            chatName: { $cond: { if: "$group", then: "$group", else: { $cond: { if: { $eq: ["$from._id", "id"] }, then: "$to", else: "$from" } } } }
+                            chatName: { $cond: { if: "$group", then: "$group", else: { $cond: { if: { $eq: ["$from._id", Mongoose.Types.ObjectId(id)] }, then: "$to", else: "$from" } } } }
                             // { $cond: { if: { $gt: [{ $size: "$Chatname" }, 0] }, then: 1, else: 0 } }, else: "NA" } }
                         }
 
