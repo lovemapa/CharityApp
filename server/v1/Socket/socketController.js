@@ -14,24 +14,30 @@ class socketController {
     // send Message
     sendMessage(socket, io, socketInfo, room_members) {
         socket.on('sendMessage', (data) => {
-            console.log(data, 'send message');
 
             socket.username = data.username
-
-
             const messageSchema = this.createMessageSchema(data, data.conversationId)
 
             messageSchema.save().then((result) => {
                 messageModel.populate(messageSchema, { path: "to from" }, function (err, data) {
+                    if (data.messageType == 'single')
+                        io.to(socketInfo[data.from]).emit('listenMessage', { success: Constant.TRUE, result: data })
+                    else {
+                        groupModel.findOne({ _id: data.groupId }).then(result => {
+                            result.members.map(value => {
+                                io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: data })
+                            })
+                        })
+                    }
                     io.in(data.conversationId).emit('sendMessage', { success: Constant.TRUE, result: data }); //emit to all in room including sender
                 })
 
             }).catch(error => {
 
                 if ((error.name == 'ValidationError'))
-                    io.to(socketInfo[data.username]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                    io.to(socketInfo[data.from]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
                 else
-                    io.to(socketInfo[data.username]).emit('sendMessage', error)
+                    io.to(socketInfo[data.from]).emit('sendMessage', error)
             })
 
 
@@ -44,8 +50,8 @@ class socketController {
         socket.on('add', (user) => {
             // var userN = JSON.parse(user)
 
-            socket.username = user.username
-            socketInfo[user.username] = socket.id;
+            socket.username = user.userId
+            socketInfo[user.userId] = socket.id;
             console.log(socketInfo);
 
         })
