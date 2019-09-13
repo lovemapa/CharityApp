@@ -7,7 +7,7 @@ import Mongoose from 'mongoose'
 import userModel from '../../models/user'
 import conversation from "../../models/conversation";
 import moment from 'moment'
-import block from "../../models/block";
+import blockModel from "../../models/block";
 
 
 class socketController {
@@ -15,39 +15,55 @@ class socketController {
     // send Message
     sendMessage(socket, io, socketInfo, room_members) {
         socket.on('sendMessage', (data) => {
+            blockModel.findOne({ userId: data.to, opponentId: data.from }).then(block => {
 
-            blockModel.findOne({ userId: to, opponentId: from }).then(block => {
+                socket.username = data.username
                 if (block)
-                    io.to(socket.id).emit('sendMessage', { success: Constant.FALSE, message: Constant.BLOCKMESSAGE })
-            })
-            socket.username = data.username
-            const messageSchema = this.createMessageSchema(data, data.conversationId)
+                    data.isBlocked = true
+                else
+                    data.isBlocked = false
 
-            messageSchema.save().then((result) => {
-                messageModel.populate(messageSchema, { path: "to from" }, function (err, data) {
-                    if (data.messageType == 'single')
-                        io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: data })
-                    else {
-                        groupModel.findOne({ _id: data.groupId }).then(result => {
-                            result.members.map(value => {
+                const messageSchema = this.createMessageSchema(data, data.conversationId)
 
-                                if (String(value) != String(data.from._id)) {
 
-                                    io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: data })
-                                }
-                            })
-                        })
+                messageSchema.save().then((result) => {
+                    if (block) {
+                        io.to(socket.id).emit('sendMessage', { success: Constant.TRUE, result: result, message: Constant.BLOCKMESSAGE })
                     }
-                    io.in(data.conversationId).emit('sendMessage', { success: Constant.TRUE, result: data }); //emit to all in room including sender
+                    else {
+                        result.isBlocked = false
+                        messageModel.populate(messageSchema, { path: "to from" }, function (err, populatedData) {
+                            if (data.messageType == 'single') {
+
+                                io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
+                            }
+                            else {
+                                groupModel.findOne({ _id: data.groupId }).then(result => {
+                                    result.members.map(value => {
+
+                                        if (String(value) != String(data.from._id)) {
+
+                                            io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
+                                        }
+                                    })
+                                })
+                            }
+                            io.in(data.conversationId).emit('sendMessage', { success: Constant.TRUE, result: populatedData }); //emit to all in room including sender
+                        })
+
+                    }
+
+                }).catch(error => {
+
+                    if ((error.name == 'ValidationError'))
+                        io.to(socketInfo[data.from]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                    else
+                        io.to(socketInfo[data.from]).emit('sendMessage', error)
                 })
 
-            }).catch(error => {
 
-                if ((error.name == 'ValidationError'))
-                    io.to(socketInfo[data.from]).emit('sendMessage', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
-                else
-                    io.to(socketInfo[data.from]).emit('sendMessage', error)
             })
+
 
 
 
@@ -74,7 +90,12 @@ class socketController {
             }
             else {
 
-                // blockModel.findOne({})
+                blockModel.findOne({ userId: data.opponentId, opponentId: data.userId }).then(block => {
+                    if (block) {
+                        console.log('YES');
+
+                    }
+                })
                 conversationModel.findOne({
                     $or: [{ $and: [{ sender_id: data.opponentId }, { reciever_id: data.userId }] },
                     { $and: [{ sender_id: data.userId }, { reciever_id: data.opponentId }] }
@@ -93,7 +114,7 @@ class socketController {
                         console.log(convId);
                         conversationSchema.save({}).then()
                     }
-                    messageModel.update({ conversationId: convId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(
+                    messageModel.updateMany({ conversationId: convId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(
                         update => {
                             socket.join(convId, function () {
                                 room_members[convId] = io.sockets.adapter.rooms[convId].sockets
@@ -286,7 +307,8 @@ class socketController {
             groupId: data.groupId,
             conversationId: conversation_id,
             date: moment().valueOf(),
-            readBy: data.from
+            readBy: data.from,
+            isBlocked: data.isBlocked
         })
         return message;
     }

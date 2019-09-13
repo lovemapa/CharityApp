@@ -32,7 +32,11 @@ let singleChatSchema = new Schema({
     },
     readBy: [{
         type: Schema.Types.ObjectId, ref: 'user' //user ids of all who has read the message
-    }]
+    }],
+    isBlocked: {
+        type: Boolean,
+        default: 0
+    }
 
 });
 
