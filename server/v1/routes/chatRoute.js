@@ -2,10 +2,28 @@ import express from 'express'
 import multer from 'multer'
 import Constant from '../constants/constant'
 import chatController from '../controllers/chatController'
-import { log } from 'util';
+import rn from 'random-number'
+import { log } from 'util'
 
 
+const storage = multer.diskStorage({
+    destination: process.cwd() + "/public/uploads/",
+    filename: function (req, file, cb) {
 
+        cb(
+            null,
+            rn({
+                min: 1001,
+                max: 9999,
+                integer: true
+            }) +
+            "_" +
+            Date.now() +
+            ".mp4"
+        );
+    }
+});
+const upload = multer({ storage: storage }).single('file')
 let chatRoutes = express.Router()
 
 
@@ -65,6 +83,36 @@ chatRoutes.route('/addMember')
             if (result) {
                 return res.json({
                     success: Constant.TRUE, message: Constant.UPDATEMSG
+                })
+            }
+        }).catch(error => {
+            console.log(error)
+            return res.json({ success: Constant.FALSE, message: error })
+        })
+    })
+
+chatRoutes.route('/uploadVideo')
+    .post(upload, (req, res) => {
+        chatController.uploadVideo(req.file).then(result => {
+
+            if (result) {
+                return res.json({
+                    success: Constant.TRUE, message: result
+                })
+            }
+        }).catch(error => {
+            console.log(error)
+            return res.json({ success: Constant.FALSE, message: error })
+        })
+    })
+
+chatRoutes.route('/blockUser')
+    .post(upload, (req, res) => {
+        chatController.blockUser(req.body).then(result => {
+
+            if (result) {
+                return res.json({
+                    success: Constant.TRUE, message: result
                 })
             }
         }).catch(error => {

@@ -22,6 +22,7 @@ let constant = {
     OBJECTIDERROR: 'Provide valid user ObjectIDs',
     PARAMSMISSINGCHATHISTORY: 'Provide both sender and reciever Id',
     PARAMSMISSINGGROUPCHATHISTORY: 'Provide sender Id',
+    BLOCKMESSAGE: 'You cannot send mesage.You are blocked by the user',
 
     // Uploaded 
     USERIMAGE: 'static/users/',

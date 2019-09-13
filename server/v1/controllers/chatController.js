@@ -8,6 +8,9 @@ import userModel from '../../models/user'
 import groupModel from '../../models/group'
 import Mongoose from 'mongoose'
 import messageModel from '../../models/message'
+import blockModel from '../../models/block'
+import ffmpeg from 'fluent-ffmpeg'
+import path from "path"
 
 
 class chatController {
@@ -201,6 +204,53 @@ class chatController {
 
 
 
+        })
+    }
+    uploadVideo(file) {
+        return new Promise((resolve, reject) => {
+            let thumb = 'thumbnail' + Date.now() + '.png'
+            var proc = new ffmpeg(path.join(process.cwd() + "/public/uploads/" + file.filename))
+                .takeScreenshots({
+                    count: 1,
+                    timemarks: ['1'], // number of seconds
+                    filename: thumb,
+                    size: '160x120'
+                }, process.cwd() + "/public/thumbnails/", function (err, data) {
+                    console.log(data);
+
+                    console.log('screenshots were saved')
+                });
+
+            resolve({ original: file.filename, thumb })
+        }).catch(err => {
+            throw err
+        })
+
+    }
+    blockUser(data) {
+        return new Promise((resolve, reject) => {
+            if (!data.userId && !data.opponentId) {
+                resolve(Constant.PARAMSMISSING)
+            }
+            else {
+                console.log(data);
+
+                const block = new blockModel({
+                    userId: data.userId,
+                    opponentId: data.opponentId
+                })
+                block.save().then(result => {
+                    resolve(result)
+                }).catch(error => {
+                    if ((error.name == 'ValidationError'))
+                        reject(Constant.OBJECTIDERROR)
+
+                    reject(error)
+                })
+            }
+
+        }).catch(err => {
+            throw err
         })
     }
 

@@ -7,6 +7,7 @@ import Mongoose from 'mongoose'
 import userModel from '../../models/user'
 import conversation from "../../models/conversation";
 import moment from 'moment'
+import block from "../../models/block";
 
 
 class socketController {
@@ -15,6 +16,10 @@ class socketController {
     sendMessage(socket, io, socketInfo, room_members) {
         socket.on('sendMessage', (data) => {
 
+            blockModel.findOne({ userId: to, opponentId: from }).then(block => {
+                if (block)
+                    io.to(socket.id).emit('sendMessage', { success: Constant.FALSE, message: Constant.BLOCKMESSAGE })
+            })
             socket.username = data.username
             const messageSchema = this.createMessageSchema(data, data.conversationId)
 
@@ -63,14 +68,13 @@ class socketController {
 
     chatHistory(socket, io, room_members) {
         socket.on('chatHistory', (data) => {
-            console.log(data);
             // console.log('chatHistory==', data);
             if (!data.opponentId && !data.userId) {
                 io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGCHATHISTORY });
             }
             else {
 
-
+                // blockModel.findOne({})
                 conversationModel.findOne({
                     $or: [{ $and: [{ sender_id: data.opponentId }, { reciever_id: data.userId }] },
                     { $and: [{ sender_id: data.userId }, { reciever_id: data.opponentId }] }
@@ -93,7 +97,6 @@ class socketController {
                         update => {
                             socket.join(convId, function () {
                                 room_members[convId] = io.sockets.adapter.rooms[convId].sockets
-                                console.log('room_members===', room_members);
                             })
 
                             messageModel.find({ conversationId: convId }).populate('from to').then(result => {
