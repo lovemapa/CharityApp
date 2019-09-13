@@ -153,13 +153,13 @@ class socketController {
 
                     messageModel.find({ conversationId: data.groupId }).populate('from').then(result => {
 
-                        io.to(socket.id).emit('groupChatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
+                        io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: result.convId });
                     }).catch(err => {
 
                         if (err.name == 'ValidationError' || 'CastError')
-                            io.to(socket.id).emit('groupChatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                            io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
                         else
-                            io.to(socket.id).emit('groupChatHistory', { success: Constant.FALSE, message: err });
+                            io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: err });
                     })
                 })
             }

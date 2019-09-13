@@ -19,8 +19,6 @@ class chatController {
     createGroup(data) {
         return new Promise((resolve, reject) => {
             if (data.groupName && data.userArray && data.createdBy) {
-                console.log(data);
-
                 const groupSchema = new groupModel({
                     members: data.userArray,
                     groupName: data.groupName,
@@ -28,16 +26,25 @@ class chatController {
                     date: moment().valueOf()
                 })
                 groupSchema.save().then(group => {
-                    console.log(group);
 
                     const message = new messageModel({
                         message: '',
                         from: group.createdBy,
                         messageType: 'group',
                         type: 'text',
-                        groupId: group._id
+                        groupId: group._id,
+                        conversationId: group._id
                     })
                     message.save().then(save => {
+
+                    })
+
+                    groupModel.updateOne({ _id: group._id }, { $addToSet: { members: data.createdBy } }).then(result => {
+                        ;
+                    }).catch(err => {
+                        if (err.errors)
+                            return reject(helper.handleValidation(err))
+                        return reject(Constant.FALSEMSG)
                     })
 
                     resolve(group)
