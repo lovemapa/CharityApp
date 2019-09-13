@@ -240,6 +240,7 @@ class socketController {
                             "messageId": { $last: "$_id" },
                             "type": { $first: "$type" },
                             "message": { $last: "$message" },
+                            "messageType": { $last: "$messageType" },
                             "group": { $last: { $arrayElemAt: ["$group", 0] } },
                             "to": { $last: { $arrayElemAt: ["$to", 0] } },
                             "from": { $last: { $arrayElemAt: ["$from", 0] } },
@@ -252,7 +253,6 @@ class socketController {
                         $project: {
                             "_id": 0,
                             "messageId": 1,
-                            "messageType": 1,
                             "message": 1,
                             "group": {
                                 $cond: { if: "$group", then: "$group", else: {} }
@@ -261,6 +261,7 @@ class socketController {
                             "to": { $cond: { if: "$to", then: "$to", else: {} } },
                             "from": 1,
                             unreadCount: 1,
+                            messageType: 1,
                             chatName: { $cond: { if: "$group", then: "$group", else: { $cond: { if: { $eq: ["$from._id", Mongoose.Types.ObjectId(id)] }, then: "$to", else: "$from" } } } }
                         }
                     }
