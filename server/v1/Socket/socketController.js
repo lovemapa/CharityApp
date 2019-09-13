@@ -61,19 +61,6 @@ class socketController {
         })
     }
 
-    createRoom(socket, io, rooms, room_members) {
-        socket.on('createRoom', (data) => {
-            socket.join(data.room, function () {
-                //==>    Object.keys(io.sockets.adapter.rooms[data.room].sockets).length    For finding numbers of clients
-                //  connected in a room 
-                room_members[data.room] = io.sockets.adapter.rooms[data.room].sockets
-                console.log(room_members);
-                io.in(data.room).emit('createRoom', { message: `your are now connected to " + ${data.room}` }); //emit to all in room including sender
-            })
-        })
-    }
-
-
     chatHistory(socket, io, room_members) {
         socket.on('chatHistory', (data) => {
             console.log(data);
@@ -191,9 +178,7 @@ class socketController {
                                     from: Mongoose.Types.ObjectId(id)
                                 },
                                 {
-
                                     groupId: { $in: IDs }
-
                                 }
                             ]
                         }
@@ -207,7 +192,6 @@ class socketController {
                             as: "to"
                         }
                     },
-
                     {
                         $lookup:
                         {
@@ -226,9 +210,6 @@ class socketController {
                             as: "group"
                         }
                     },
-                    // { $unwind: "$sender" },
-                    // { $unwind: "$group" },
-                    // { $unwind: "$reciever" },
                     {
                         $group: {
                             "_id": "$conversationId",
@@ -243,13 +224,8 @@ class socketController {
 
 
                         }
-                    },
-
-
-                    {
+                    }, {
                         $project: {
-
-
                             "_id": 0,
                             "messageId": 1,
                             "messageType": 1,
@@ -262,9 +238,7 @@ class socketController {
                             "from": 1,
                             unreadCount: 1,
                             chatName: { $cond: { if: "$group", then: "$group", else: { $cond: { if: { $eq: ["$from._id", Mongoose.Types.ObjectId(id)] }, then: "$to", else: "$from" } } } }
-                            // { $cond: { if: { $gt: [{ $size: "$Chatname" }, 0] }, then: 1, else: 0 } }, else: "NA" } }
                         }
-
                     }
                 ]).then(result => {
                     io.to(socket.id).emit('chatList', { success: Constant.TRUE, chatList: result, message: Constant.TRUEMSG })

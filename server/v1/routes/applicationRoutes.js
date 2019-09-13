@@ -29,7 +29,7 @@ applicationRoutes.route('/register')
 applicationRoutes.route('/:id')
     .get((req, res) => {
 
-        applicationRepo.appInfo(req.params.id).then(result => {
+        applicationRepo.getProfile(req.params.id).then(result => {
 
             return res.json({
                 success: Constant.TRUE, message: Constant.TRUEMSG, application: result

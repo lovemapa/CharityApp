@@ -1,7 +1,7 @@
 import express from 'express'
 import multer from 'multer'
 import Constant from '../constants/constant'
-
+import rn from 'random-number'
 import userController from '../controllers/userController'
 import Application from '../../models/application';
 
@@ -23,23 +23,32 @@ let auth = function (req, res, next) {
 }
 
 // Upload Image
-var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './server/images/users')
-    },
+const storage = multer.diskStorage({
+    destination: process.cwd() + "/public/uploads/",
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + "_" + Date.now() + "_" + file.originalname)
-    }
-})
 
-var uploadPic = multer({ storage: storage }).single('image')
+        cb(
+            null,
+            "img_" +
+            rn({
+                min: 1001,
+                max: 9999,
+                integer: true
+            }) +
+            "_" +
+            Date.now() +
+            ".jpeg"
+        );
+    }
+});
+const upload = multer({ storage: storage }).single('file')
 
 
 // Register User
 userRoutes.route('/register')
-    .post(auth, (req, res) => {
+    .post([auth, upload], (req, res) => {
 
-        userRepo.register(req.body).then(result => {
+        userRepo.register(req.body, req.file).then(result => {
 
             return res.json({
                 success: Constant.TRUE, message: Constant.REGISTERAPP, user: result

@@ -12,14 +12,21 @@ import { log } from 'util';
 class userController {
 
     // Register Application
-    register(data) {
+    register(data, file) {
+
         return new Promise((resolve, reject) => {
+            var profilePic = ''
+            if (file)
+                profilePic = file.filename
+            else
+                profilePic = 'download.png'
             let user = new User({
                 firstName: data.firstName,
                 date: moment().valueOf(),
                 appId: data.appId,
                 lastName: data.lastName,
-                username: data.username
+                username: data.username,
+                profilePic: '/' + profilePic
 
             })
 
@@ -42,10 +49,10 @@ class userController {
 
 
 
-    appInfo(id) {
+    getProfile(id) {
         return new Promise((resolve, reject) => {
 
-            Application.findById(id).then(result => {
+            User.findById(id).then(result => {
 
                 if (!result)
                     return reject(Constant.INVALIDPARAMS)

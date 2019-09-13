@@ -16,6 +16,10 @@ let userSchema = new Schema({
     username: {
         type: String,
     },
+    profilePic:
+    {
+        type: String,
+    },
     appId: { type: Schema.Types.ObjectId, ref: 'Application' },
 
 

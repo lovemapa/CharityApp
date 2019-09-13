@@ -18,13 +18,12 @@ module.exports = (io) => {
 
         soc.sendMessage(socket, io, socketInfo, room_members) //Send Message
         soc.addUsername(socket, io, socketInfo) //Add username to corresponding socketID
-        soc.createRoom(socket, io, rooms, room_members)
-        soc.chatHistory(socket, io, room_members)
-        soc.userList(socket, io)
-        soc.chatList(socket, io)
-        soc.typing(socket, io)
-        soc.isRead(socket, io, socketInfo)
-        soc.groupChatHistory(socket, io, room_members)
+        soc.chatHistory(socket, io, room_members)   //get Chat History
+        soc.userList(socket, io) //get List of users
+        soc.chatList(socket, io) // get chat list of signed in user 
+        soc.typing(socket, io) // user  is typing on other end
+        soc.isRead(socket, io, socketInfo) // check if message is read
+        soc.groupChatHistory(socket, io, room_members) // fetch group chat history
 
 
     })

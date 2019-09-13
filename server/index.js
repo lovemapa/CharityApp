@@ -16,6 +16,7 @@ var io = require('socket.io')(http);
 
 
 dotenv.config();
+app.use(express.static(path.join(process.cwd() + "/public/uploads/")));
 app.use(function (req, res, next) {
     res.setHeader("Access-Control-Allow-Origin", "*")
     res.setHeader("Access-Control-Allow-Credentials", true)
