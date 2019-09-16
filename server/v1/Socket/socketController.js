@@ -35,22 +35,20 @@ class socketController {
                         messageModel.populate(messageSchema, { path: "to from" }, function (err, populatedData) {
 
                             if (data.messageType == 'single') {
-
+                                populatedData.set('chatName', populatedData.to, { strict: false })
                                 io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
                             }
                             else {
                                 groupModel.findOne({ _id: data.groupId }).then(result => {
                                     result.members.map(value => {
-
-
                                         if (String(value) != String(populatedData.from._id)) {
-
+                                            populatedData.set('chatName', result, { strict: false })
                                             io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
                                         }
                                     })
                                 })
                             }
-                            io.in(data.groupId).emit('sendMessage', { success: Constant.TRUE, result: populatedData }); //emit to all in room including sender
+                            io.in(data.conversationId).emit('sendMessage', { success: Constant.TRUE, result: populatedData }); //emit to all in room including sender
 
                         })
 
@@ -278,7 +276,10 @@ class socketController {
 
     typing(socket, io) {
         socket.on('typing', data => {
-            io.to(data.conversationId).emit('typing', { success: Constant.TRUE })
+            userModel.findOne({ _id: data.from }).select('firstName lastName').then(user => {
+                user.set('isTyping', data.isTyping, { strict: false })
+                io.in(data.conversationId).emit('typing', { success: Constant.TRUE, from: user })
+            })
 
         })
     }
@@ -288,7 +289,7 @@ class socketController {
             if (!data.opponentId && !data.conversationId)
                 io.to(socket.id).emit('isRead', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
             else {
-                messageModel.update({ conversationId: convId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(updateResult => {
+                messageModel.update({ conversationId: data.conversationId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(updateResult => {
                     io.to(socketInfo[data.opponentId]).emit('isRead', { success: Constant.TRUE })
                 })
             }
