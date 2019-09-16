@@ -31,8 +31,9 @@ class socketController {
                         io.to(socket.id).emit('sendMessage', { success: Constant.TRUE, result: result, message: Constant.BLOCKMESSAGE })
                     }
                     else {
-                        result.isBlocked = false
+
                         messageModel.populate(messageSchema, { path: "to from" }, function (err, populatedData) {
+
                             if (data.messageType == 'single') {
 
                                 io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
@@ -41,14 +42,16 @@ class socketController {
                                 groupModel.findOne({ _id: data.groupId }).then(result => {
                                     result.members.map(value => {
 
-                                        if (String(value) != String(data.from._id)) {
+
+                                        if (String(value) != String(populatedData.from._id)) {
 
                                             io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
                                         }
                                     })
                                 })
                             }
-                            io.in(data.conversationId).emit('sendMessage', { success: Constant.TRUE, result: populatedData }); //emit to all in room including sender
+                            io.in(data.groupId).emit('sendMessage', { success: Constant.TRUE, result: populatedData }); //emit to all in room including sender
+
                         })
 
                     }
@@ -73,8 +76,6 @@ class socketController {
     // Add a username to connected socket for Single chat
     addUsername(socket, io, socketInfo) {
         socket.on('add', (user) => {
-            // var userN = JSON.parse(user)
-
             socket.username = user.userId
             socketInfo[user.userId] = socket.id;
             console.log(socketInfo);
@@ -149,6 +150,8 @@ class socketController {
 
                     socket.join(data.groupId, function () {
                         room_members[data.groupId] = io.sockets.adapter.rooms[data.groupId].sockets
+                        console.log(room_members);
+
                     })
 
                     messageModel.find({ conversationId: data.groupId }).populate('from').then(result => {
