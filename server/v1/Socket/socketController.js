@@ -90,13 +90,6 @@ class socketController {
                 io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGCHATHISTORY });
             }
             else {
-
-                blockModel.findOne({ userId: data.opponentId, opponentId: data.userId }).then(block => {
-                    if (block) {
-                        console.log('YES');
-
-                    }
-                })
                 conversationModel.findOne({
                     $or: [{ $and: [{ sender_id: data.opponentId }, { reciever_id: data.userId }] },
                     { $and: [{ sender_id: data.userId }, { reciever_id: data.opponentId }] }
@@ -112,7 +105,7 @@ class socketController {
                         })
 
                         convId = conversationSchema._id
-                        console.log(convId);
+
                         conversationSchema.save({}).then()
                     }
                     messageModel.updateMany({ conversationId: convId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(
@@ -121,7 +114,11 @@ class socketController {
                                 room_members[convId] = io.sockets.adapter.rooms[convId].sockets
                             })
 
-                            messageModel.find({ conversationId: convId }).populate('from to').then(result => {
+                            messageModel.find({
+                                $or: [{ $and: [{ conversationId: convId }, { isBlocked: false }] },
+                                { $and: [{ to: { $ne: data.opponentId } }, { isBlocked: true }] }
+                                ]
+                            }).populate('from to').then(result => {
 
                                 io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
                             }).catch(err => {
@@ -189,7 +186,6 @@ class socketController {
                 io.to(socket.id).emit('chatList', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
 
             }
-            console.log(data.userId);
             var IDs = [];
             groupModel.find({ members: id }).then(groupMembers => {
                 groupMembers.map(value => {
@@ -282,7 +278,7 @@ class socketController {
 
     typing(socket, io) {
         socket.on('typing', data => {
-            io.to(socket.id).emit('typing', { success: Constant.TRUE })
+            io.to(data.conversationId).emit('typing', { success: Constant.TRUE })
 
         })
     }
