@@ -106,29 +106,29 @@ class socketController {
 
                         conversationSchema.save({}).then()
                     }
-                    messageModel.updateMany({ conversationId: convId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(
-                        update => {
-                            socket.join(convId, function () {
-                                room_members[convId] = io.sockets.adapter.rooms[convId].sockets
+
+                    messageModel.find({
+                        // conversationId: convId
+                        $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false }]
+                    }).populate('from to').then(result => {
+
+                        messageModel.updateMany({
+                            readBy: { $ne: data.userId },
+                            $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false }]
+                        }, { $push: { readBy: data.userId } }, { multi: true }).then(
+                            update => {
+                                socket.join(convId, function () {
+                                    room_members[convId] = io.sockets.adapter.rooms[convId].sockets
+                                })
                             })
+                        io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
+                    }).catch(err => {
 
-                            messageModel.find({
-                                $or: [{ $and: [{ conversationId: convId }, { isBlocked: false }] },
-                                { $and: [{ to: { $ne: data.opponentId } }, { isBlocked: true }] }
-                                ]
-                            }).populate('from to').then(result => {
-
-                                io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
-                            }).catch(err => {
-
-                                if (err.name == 'ValidationError' || 'CastError')
-                                    io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
-                                else
-                                    io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: err });
-                            })
-                        }
-                    )
-
+                        if (err.name == 'ValidationError' || 'CastError')
+                            io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
+                        else
+                            io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: err });
+                    })
                 })
             }
         })
@@ -286,10 +286,10 @@ class socketController {
 
     isRead(socket, io, socketInfo) {
         socket.on('isRead', data => {
-            if (!data.opponentId && !data.conversationId)
+            if (!data.opponentId && !data.conversationId && !data.userId)
                 io.to(socket.id).emit('isRead', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
             else {
-                messageModel.update({ conversationId: data.conversationId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(updateResult => {
+                messageModel.update({ conversationId: data.conversationId, readBy: { $ne: data.userId }, isBlocked: false }, { $push: { readBy: data.userId } }, { multi: true }).then(updateResult => {
                     io.to(socketInfo[data.opponentId]).emit('isRead', { success: Constant.TRUE })
                 })
             }
