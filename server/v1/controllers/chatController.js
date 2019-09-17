@@ -261,6 +261,28 @@ class chatController {
             throw err
         })
     }
+    unBlockUser(data) {
+        return new Promise((resolve, reject) => {
+            if (!data.userId && !data.opponentId) {
+                reject(Constant.PARAMSMISSING)
+            }
+            else {
+                blockModel.remove({
+                    userId: data.userId, opponentId: data.opponentId
+                }).then(result => {
+                    if (result)
+                        resolve(Constant.UNBLOCKED)
+                })
+                    .catch(error => {
+                        if ((error.name == 'ValidationError'))
+                            reject(Constant.OBJECTIDERROR)
+                        reject(error)
+                    })
+            }
+        }).catch(err => {
+            throw err
+        })
+    }
 
 
 }

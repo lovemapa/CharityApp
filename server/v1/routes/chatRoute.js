@@ -120,6 +120,20 @@ chatRoutes.route('/blockUser')
             return res.json({ success: Constant.FALSE, message: error })
         })
     })
+chatRoutes.route('/unblockUser')
+    .post(upload, (req, res) => {
+        chatController.unBlockUser(req.body).then(result => {
+
+            if (result) {
+                return res.json({
+                    success: Constant.TRUE, message: result
+                })
+            }
+        }).catch(error => {
+            console.log(error)
+            return res.json({ success: Constant.FALSE, message: error })
+        })
+    })
 
 
 module.exports = chatRoutes
