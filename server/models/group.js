@@ -9,7 +9,7 @@ let groupSchema = new Schema({
     members: [{ type: Schema.Types.ObjectId, ref: 'user' }],// members array,
     createdBy: { type: Schema.Types.ObjectId, ref: 'user' }, // GroupAdmin
     date: {
-        type: Number
+        type: Number                                        //Creation Date for Group
     },
     isActive: {                                      // Group Exists or deleted
         type: Number,

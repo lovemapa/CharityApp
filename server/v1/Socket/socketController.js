@@ -12,11 +12,9 @@ import blockModel from "../../models/block";
 
 class socketController {
 
-    // send Message
+    // Send Message to a group or particular user
     sendMessage(socket, io, socketInfo, room_members) {
         socket.on('sendMessage', (data) => {
-            console.log('SENDMESSAGE');
-
             blockModel.findOne({ userId: data.to, opponentId: data.from }).then(block => {
                 socket.username = data.username
                 if (block)
@@ -52,20 +50,14 @@ class socketController {
                                             obj.conversationId = populatedData.conversationId
                                             obj.chatName = result
                                             obj.unreadCount = 0
-                                            // console.log("obj==", obj);
-
-
                                             io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: obj })
                                         }
                                     })
                                 })
                             }
                             io.in(data.conversationId).emit('sendMessage', { success: Constant.TRUE, result: populatedData }); //emit to all in room including sender
-
                         })
-
                     }
-
                 }).catch(error => {
 
                     if ((error.name == 'ValidationError'))
@@ -73,17 +65,31 @@ class socketController {
                     else
                         io.to(socketInfo[data.from]).emit('sendMessage', error)
                 })
-
-
             })
-
-
-
-
         })
+    }
+    // Message Schema
+
+    createMessageSchema(data, conversation_id) {
+        if (data.messageType == 'group')
+            var conversation_id = data.groupId
+        let message = new messageModel({
+            message: data.message,
+            to: data.to,
+            from: data.from,
+            type: data.type,
+            messageType: data.messageType,
+            groupId: data.groupId,
+            conversationId: conversation_id,
+            date: moment().valueOf(),
+            readBy: data.from,
+            isBlocked: data.isBlocked
+        })
+        return message;
     }
 
     // Add a username to connected socket for Single chat
+
     addUsername(socket, io, socketInfo) {
         socket.on('add', (user) => {
             console.log('add');
@@ -94,9 +100,10 @@ class socketController {
         })
     }
 
+    //Get Chat History for one to one chat
+
     chatHistory(socket, io, room_members) {
         socket.on('chatHistory', (data) => {
-            console.log('chatHistory');
             if (!data.opponentId && !data.userId) {
                 io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGCHATHISTORY });
             }
@@ -121,7 +128,6 @@ class socketController {
                     }
 
                     messageModel.find({
-                        // conversationId: convId
                         $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false }],
                         message: { $ne: "" }
                     }).populate('from to').then(result => {
@@ -137,7 +143,6 @@ class socketController {
                             })
                         io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
                     }).catch(err => {
-
                         if (err.name == 'ValidationError' || 'CastError')
                             io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
                         else
@@ -148,9 +153,10 @@ class socketController {
         })
     }
 
+    //Get Chat History for one to one chat
+
     groupChatHistory(socket, io, room_members) {
         socket.on('groupChatHistory', data => {
-            console.log('groupChatHistory');
             if (!data.userId) {
                 io.to(socket.id).emit('groupChatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGGROUPCHATHISTORY });
             }
@@ -177,23 +183,11 @@ class socketController {
             }
         })
     }
-    userList(socket, io) {
-        socket.on('userList', userId => {
-            console.log(userId.senderId);
 
-            userModel.find({ _id: { $ne: userId.senderId } }).
-                then(users => {
-                    io.to(socket.id).emit('userList', { success: Constant.TRUE, users: users, message: Constant.TRUEMSG })
-                })
-                .catch(error => {
-                    io.to(socket.id).emit('userList', { success: Constant.FALSE, message: error })
-                })
-        })
-    }
+    // Get chatlist of a particular user
 
     chatList(socket, io) {
         socket.on('chatList', data => {
-            console.log('chatList');
             var id = data.userId
             if (!id) {
                 io.to(socket.id).emit('chatList', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
@@ -293,10 +287,10 @@ class socketController {
         })
     }
 
+    //emiting typing to a group or particular user
+
     typing(socket, io) {
         socket.on('typing', data => {
-            console.log('typing');
-
             userModel.findOne({ _id: data.from }).select('firstName lastName').then(user => {
                 user.set('isTyping', data.isTyping, { strict: false })
                 io.in(data.conversationId).emit('typing', { success: Constant.TRUE, from: user })
@@ -304,6 +298,8 @@ class socketController {
 
         })
     }
+
+    // Change Read Status of messages
 
     isRead(socket, io, socketInfo) {
         socket.on('isRead', data => {
@@ -318,24 +314,7 @@ class socketController {
             }
         })
     }
-    // Message Schema
-    createMessageSchema(data, conversation_id) {
-        if (data.messageType == 'group')
-            var conversation_id = data.groupId
-        let message = new messageModel({
-            message: data.message,
-            to: data.to,
-            from: data.from,
-            type: data.type,
-            messageType: data.messageType,
-            groupId: data.groupId,
-            conversationId: conversation_id,
-            date: moment().valueOf(),
-            readBy: data.from,
-            isBlocked: data.isBlocked
-        })
-        return message;
-    }
+
 
 
 

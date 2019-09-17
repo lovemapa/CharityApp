@@ -1,24 +1,24 @@
 import mongoose, { Schema } from "mongoose";
 
 let userSchema = new Schema({
-    firstName: {
+    firstName: {          //First Name of user
         type: String,
         required: true
     },
-    lastName: {
+    lastName: {           //Last Name of user
         type: String,
         required: true
     },
     date: {
-        type: Number,
+        type: Number,      //creation date of User
         select: false
     },
     username: {
-        type: String,
+        type: String,       //Unique username
     },
     profilePic:
     {
-        type: String,
+        type: String,       //Profile Picture
     },
     appId: { type: Schema.Types.ObjectId, ref: 'Application' },
 

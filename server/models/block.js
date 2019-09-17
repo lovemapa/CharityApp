@@ -1,8 +1,8 @@
 import mongoose, { Schema } from "mongoose";
 
 let blockSchema = new Schema({
-    userId: { type: Schema.Types.ObjectId, ref: 'user' },// sender's  ID
-    opponentId: { type: Schema.Types.ObjectId, ref: 'user' },// reciever's  ID
+    userId: { type: Schema.Types.ObjectId, ref: 'user' },// Blocking User
+    opponentId: { type: Schema.Types.ObjectId, ref: 'user' },// Blocked user
 });
 
 

@@ -2,19 +2,19 @@ import mongoose, { Schema } from "mongoose";
 
 let singleChatSchema = new Schema({
     message: {
-        type: String, // message
+        type: String,               // message
     },
 
     to: {
-        type: Schema.Types.ObjectId, ref: 'user' // reciever
+        type: Schema.Types.ObjectId, ref: 'user'        // reciever
     },
     from: {
-        type: Schema.Types.ObjectId, ref: 'user' //sender
+        type: Schema.Types.ObjectId, ref: 'user'        // sender
     },
     type: { // image, video or text
         type: String,
     },
-    conversationId: {
+    conversationId: {                               // Conversation ID of chat(group or two users)
         type: Schema.Types.ObjectId, ref: 'conversation'
     },
     is_deleted: {
@@ -28,13 +28,13 @@ let singleChatSchema = new Schema({
         type: Schema.Types.ObjectId, ref: 'groups' // groupId
     },
     date: {
-        type: Number,
+        type: Number,   //Creation Date of Message
     },
     readBy: [{
         type: Schema.Types.ObjectId, ref: 'user' //user ids of all who has read the message
     }],
     isBlocked: {
-        type: Boolean,
+        type: Boolean,     //Status of those messages which are sent during Blocked by sender
         default: 0
     }
 

@@ -5,7 +5,7 @@ import chatController from '../controllers/chatController'
 import rn from 'random-number'
 import { log } from 'util'
 
-
+// for Media upload send during chatting
 const storage = multer.diskStorage({
     destination: process.cwd() + "/public/uploads/",
     filename: function (req, file, cb) {
@@ -28,6 +28,7 @@ let chatRoutes = express.Router()
 
 
 // Create Group
+
 chatRoutes.route('/createGroup')
     .post((req, res) => {
 
@@ -45,6 +46,7 @@ chatRoutes.route('/createGroup')
     })
 
 // get List of users to chat
+
 chatRoutes.route('/getUserList/:appId')
     .get((req, res) => {
 
@@ -61,6 +63,8 @@ chatRoutes.route('/getUserList/:appId')
         })
     })
 
+//Get chatList of particular User
+
 chatRoutes.route('/getChatlist/:sender_id')
     .get((req, res) => {
         chatController.getChatlist(req.params.sender_id).then(result => {
@@ -75,6 +79,8 @@ chatRoutes.route('/getChatlist/:sender_id')
             return res.json({ success: Constant.FALSE, message: error })
         })
     })
+
+//Adding member to group
 
 chatRoutes.route('/addMember')
     .patch((req, res) => {
@@ -91,6 +97,8 @@ chatRoutes.route('/addMember')
         })
     })
 
+//Uploading media during messaging
+
 chatRoutes.route('/uploadVideo')
     .post(upload, (req, res) => {
         chatController.uploadVideo(req.file).then(result => {
@@ -106,6 +114,8 @@ chatRoutes.route('/uploadVideo')
         })
     })
 
+//Blocking the user in one to one conversation
+
 chatRoutes.route('/blockUser')
     .post(upload, (req, res) => {
         chatController.blockUser(req.body).then(result => {
@@ -120,6 +130,9 @@ chatRoutes.route('/blockUser')
             return res.json({ success: Constant.FALSE, message: error })
         })
     })
+
+//Unblock the user in one to one conversation
+
 chatRoutes.route('/unblockUser')
     .post(upload, (req, res) => {
         chatController.unBlockUser(req.body).then(result => {
