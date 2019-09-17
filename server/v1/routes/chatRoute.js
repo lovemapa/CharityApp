@@ -112,7 +112,7 @@ chatRoutes.route('/blockUser')
 
             if (result) {
                 return res.json({
-                    success: Constant.TRUE, message: result
+                    success: Constant.TRUE, message: Constant.BLOCKED
                 })
             }
         }).catch(error => {

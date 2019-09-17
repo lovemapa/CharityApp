@@ -25,6 +25,7 @@ let constant = {
     BLOCKMESSAGE: 'You cannot send mesage.You are blocked by the user',
     ALREADYBLOCKED: 'User is already blocked',
     UNBLOCKED: 'User is unblocked succesfully',
+    BLOCKED: 'User is blocked Successfully',
 
     // Uploaded 
     USERIMAGE: 'static/users/',

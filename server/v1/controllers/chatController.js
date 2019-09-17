@@ -110,8 +110,6 @@ class chatController {
 
                     IDs.push(Mongoose.Types.ObjectId(value._id))
                 })
-                console.log(IDs);
-
                 messageModel.aggregate([
                     {
                         $match: {
@@ -170,6 +168,7 @@ class chatController {
                             "from": { $last: { $arrayElemAt: ["$from", 0] } },
                             "conversationId": { $first: "$conversationId" },
                             "messageType": { $last: "$messageType" },
+                            "date": { $last: "$date" },
                             unreadCount: { $sum: { $cond: { if: { $in: [Mongoose.Types.ObjectId(id), "$readBy"] }, then: 0, else: 1 } } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
 
 
@@ -188,16 +187,20 @@ class chatController {
                             "group": {
                                 $cond: { if: "$group", then: "$group", else: {} }
                             },
+                            date: 1,
                             "unread": "$readBy",
                             "sender": 1,
                             "to": { $cond: { if: "$to", then: "$to", else: {} } },
                             "from": 1,
                             unreadCount: 1,
+                            conversationId: 1,
                             chatName: { $cond: { if: "$group", then: "$group", else: { $cond: { if: { $eq: ["$from._id", Mongoose.Types.ObjectId(id)] }, then: "$to", else: "$from" } } } }
                             // { $cond: { if: { $gt: [{ $size: "$Chatname" }, 0] }, then: 1, else: 0 } }, else: "NA" } }
                         }
 
-                    }
+                    },
+
+                    { $sort: { "date": -1 } }
                 ]).then(result => {
                     resolve(result)
                 }).catch(err => {
@@ -255,11 +258,15 @@ class chatController {
                         block.save().then(result => {
                             resolve(result)
                         }).catch(error => {
-                            if ((error.name == 'ValidationError'))
+                            if (error.name == 'ValidationError' || 'CastError')
                                 reject(Constant.OBJECTIDERROR)
                             reject(error)
                         })
                     }
+                }).catch(error => {
+                    if (error.name == 'ValidationError' || 'CastError')
+                        reject(Constant.OBJECTIDERROR)
+                    reject(error)
                 })
             }
 

@@ -18,7 +18,6 @@ class socketController {
             console.log('SENDMESSAGE');
 
             blockModel.findOne({ userId: data.to, opponentId: data.from }).then(block => {
-                console.log('MESSAGE==', data)
                 socket.username = data.username
                 if (block)
                     data.isBlocked = true
@@ -42,10 +41,21 @@ class socketController {
                             }
                             else {
                                 groupModel.findOne({ _id: data.groupId }).then(result => {
+                                    console.log('Group send Message', socketInfo);
                                     result.members.map(value => {
                                         if (String(value) != String(populatedData.from._id)) {
                                             populatedData.set('chatName', result, { strict: false })
-                                            io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
+                                            let obj = {}
+                                            obj.from = populatedData.from
+                                            obj.message = populatedData.message
+                                            obj.messageType = populatedData.messageType
+                                            obj.conversationId = populatedData.conversationId
+                                            obj.chatName = result
+                                            obj.unreadCount = 0
+                                            // console.log("obj==", obj);
+
+
+                                            io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: obj })
                                         }
                                     })
                                 })
@@ -112,7 +122,8 @@ class socketController {
 
                     messageModel.find({
                         // conversationId: convId
-                        $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false }]
+                        $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false }],
+                        message: { $ne: "" }
                     }).populate('from to').then(result => {
 
                         messageModel.updateMany({
@@ -153,7 +164,7 @@ class socketController {
 
                     })
 
-                    messageModel.find({ conversationId: data.groupId }).populate('from').then(result => {
+                    messageModel.find({ conversationId: data.groupId, message: { $ne: "" } }).populate('from').then(result => {
                         io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: data.groupId });
                     }).catch(err => {
 
@@ -246,6 +257,7 @@ class socketController {
                             "to": { $last: { $arrayElemAt: ["$to", 0] } },
                             "from": { $last: { $arrayElemAt: ["$from", 0] } },
                             "conversationId": { $first: "$conversationId" },
+                            "date": { $last: "$date" },
                             unreadCount: { $sum: { $cond: { if: { $in: [Mongoose.Types.ObjectId(id), "$readBy"] }, then: 0, else: 1 } } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
 
 
@@ -258,14 +270,17 @@ class socketController {
                             "group": {
                                 $cond: { if: "$group", then: "$group", else: {} }
                             },
+                            date: 1,
                             "sender": 1,
+                            conversationId: 1,
                             "to": { $cond: { if: "$to", then: "$to", else: {} } },
                             "from": 1,
                             unreadCount: 1,
                             messageType: 1,
                             chatName: { $cond: { if: "$group", then: "$group", else: { $cond: { if: { $eq: ["$from._id", Mongoose.Types.ObjectId(id)] }, then: "$to", else: "$from" } } } }
                         }
-                    }
+                    },
+                    { $sort: { "date": -1 } }
                 ]).then(result => {
                     io.to(socket.id).emit('chatList', { success: Constant.TRUE, chatList: result, message: Constant.TRUEMSG })
                 }).catch(err => {
@@ -292,9 +307,9 @@ class socketController {
 
     isRead(socket, io, socketInfo) {
         socket.on('isRead', data => {
-            console.log('isRead', data);
+            console.log('isRead');
 
-            if (!data.opponentId && !data.conversationId)
+            if (!data.userId && !data.conversationId)
                 io.to(socket.id).emit('isRead', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
             else {
                 messageModel.update({ conversationId: data.conversationId, readBy: { $ne: data.userId }, isBlocked: false }, { $push: { readBy: data.userId } }, { multi: true }).then(updateResult => {
