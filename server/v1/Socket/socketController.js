@@ -15,8 +15,10 @@ class socketController {
     // send Message
     sendMessage(socket, io, socketInfo, room_members) {
         socket.on('sendMessage', (data) => {
-            blockModel.findOne({ userId: data.to, opponentId: data.from }).then(block => {
+            console.log('SENDMESSAGE');
 
+            blockModel.findOne({ userId: data.to, opponentId: data.from }).then(block => {
+                console.log('MESSAGE==', data)
                 socket.username = data.username
                 if (block)
                     data.isBlocked = true
@@ -25,7 +27,7 @@ class socketController {
 
                 const messageSchema = this.createMessageSchema(data, data.conversationId)
 
-
+                log
                 messageSchema.save().then((result) => {
                     if (block) {
                         io.to(socket.id).emit('sendMessage', { success: Constant.TRUE, result: result, message: Constant.BLOCKMESSAGE })
@@ -74,6 +76,7 @@ class socketController {
     // Add a username to connected socket for Single chat
     addUsername(socket, io, socketInfo) {
         socket.on('add', (user) => {
+            console.log('add');
             socket.username = user.userId
             socketInfo[user.userId] = socket.id;
             console.log(socketInfo);
@@ -83,7 +86,7 @@ class socketController {
 
     chatHistory(socket, io, room_members) {
         socket.on('chatHistory', (data) => {
-            // console.log('chatHistory==', data);
+            console.log('chatHistory');
             if (!data.opponentId && !data.userId) {
                 io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGCHATHISTORY });
             }
@@ -136,12 +139,13 @@ class socketController {
 
     groupChatHistory(socket, io, room_members) {
         socket.on('groupChatHistory', data => {
+            console.log('groupChatHistory');
             if (!data.userId) {
                 io.to(socket.id).emit('groupChatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGGROUPCHATHISTORY });
             }
             else {
 
-                messageModel.update({ group_id: data.groupId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(conversation => {
+                messageModel.updateMany({ group_id: data.groupId, readBy: { $ne: data.userId } }, { $push: { readBy: data.userId } }, { multi: true }).then(conversation => {
 
                     socket.join(data.groupId, function () {
                         room_members[data.groupId] = io.sockets.adapter.rooms[data.groupId].sockets
@@ -150,8 +154,7 @@ class socketController {
                     })
 
                     messageModel.find({ conversationId: data.groupId }).populate('from').then(result => {
-
-                        io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: result.convId });
+                        io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: data.groupId });
                     }).catch(err => {
 
                         if (err.name == 'ValidationError' || 'CastError')
@@ -179,6 +182,7 @@ class socketController {
 
     chatList(socket, io) {
         socket.on('chatList', data => {
+            console.log('chatList');
             var id = data.userId
             if (!id) {
                 io.to(socket.id).emit('chatList', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
@@ -276,6 +280,8 @@ class socketController {
 
     typing(socket, io) {
         socket.on('typing', data => {
+            console.log('typing');
+
             userModel.findOne({ _id: data.from }).select('firstName lastName').then(user => {
                 user.set('isTyping', data.isTyping, { strict: false })
                 io.in(data.conversationId).emit('typing', { success: Constant.TRUE, from: user })
@@ -286,7 +292,9 @@ class socketController {
 
     isRead(socket, io, socketInfo) {
         socket.on('isRead', data => {
-            if (!data.opponentId && !data.conversationId && !data.userId)
+            console.log('isRead', data);
+
+            if (!data.opponentId && !data.conversationId)
                 io.to(socket.id).emit('isRead', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
             else {
                 messageModel.update({ conversationId: data.conversationId, readBy: { $ne: data.userId }, isBlocked: false }, { $push: { readBy: data.userId } }, { multi: true }).then(updateResult => {

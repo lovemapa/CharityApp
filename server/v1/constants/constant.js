@@ -23,6 +23,8 @@ let constant = {
     PARAMSMISSINGCHATHISTORY: 'Provide both sender and reciever Id',
     PARAMSMISSINGGROUPCHATHISTORY: 'Provide sender Id',
     BLOCKMESSAGE: 'You cannot send mesage.You are blocked by the user',
+    ALREADYBLOCKED: 'User is already blocked',
+    UNBLOCKED: 'User is unblocked succesfully',
 
     // Uploaded 
     USERIMAGE: 'static/users/',

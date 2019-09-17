@@ -238,22 +238,28 @@ class chatController {
     blockUser(data) {
         return new Promise((resolve, reject) => {
             if (!data.userId && !data.opponentId) {
-                resolve(Constant.PARAMSMISSING)
+                reject(Constant.PARAMSMISSING)
             }
             else {
-                console.log(data);
-
-                const block = new blockModel({
+                blockModel.findOne({
                     userId: data.userId,
                     opponentId: data.opponentId
-                })
-                block.save().then(result => {
-                    resolve(result)
-                }).catch(error => {
-                    if ((error.name == 'ValidationError'))
-                        reject(Constant.OBJECTIDERROR)
-
-                    reject(error)
+                }).then(block => {
+                    if (block)
+                        reject(Constant.ALREADYBLOCKED)
+                    else {
+                        const block = new blockModel({
+                            userId: data.userId,
+                            opponentId: data.opponentId
+                        })
+                        block.save().then(result => {
+                            resolve(result)
+                        }).catch(error => {
+                            if ((error.name == 'ValidationError'))
+                                reject(Constant.OBJECTIDERROR)
+                            reject(error)
+                        })
+                    }
                 })
             }
 
@@ -267,7 +273,7 @@ class chatController {
                 reject(Constant.PARAMSMISSING)
             }
             else {
-                blockModel.remove({
+                blockModel.deleteOne({
                     userId: data.userId, opponentId: data.opponentId
                 }).then(result => {
                     if (result)
