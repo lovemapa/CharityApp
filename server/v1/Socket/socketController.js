@@ -100,6 +100,7 @@ class socketController {
         })
     }
 
+
     userList(socket, io) {
         socket.on('userList', (user) => {
             userModel.find({}).then(result => {
