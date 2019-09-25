@@ -60,7 +60,7 @@ userRoutes.route('/register')
     })
 
 
-// get Usr Info
+// get User Info
 userRoutes.route('/:id')
     .get(auth, (req, res) => {
 

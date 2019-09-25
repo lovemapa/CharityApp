@@ -100,6 +100,14 @@ class socketController {
         })
     }
 
+    userList(socket, io) {
+        socket.on('userList', (user) => {
+            userModel.find({}).then(result => {
+                io.to(socket.id).emit('userList', { users: result })
+            })
+
+        })
+    }
     //Get Chat History for one to one chat
 
     chatHistory(socket, io, room_members) {
@@ -309,7 +317,10 @@ class socketController {
                 io.to(socket.id).emit('isRead', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
             else {
                 messageModel.update({ conversationId: data.conversationId, readBy: { $ne: data.userId }, isBlocked: false }, { $push: { readBy: data.userId } }, { multi: true }).then(updateResult => {
-                    io.to(socketInfo[data.opponentId]).emit('isRead', { success: Constant.TRUE })
+                    if (data.messageType == 'group')
+                        io.in(data.groupId).emit('isRead', { success: Constant.TRUE })
+                    else
+                        io.to(socketInfo[data.opponentId]).emit('isRead', { success: Constant.TRUE })
                 })
             }
         })

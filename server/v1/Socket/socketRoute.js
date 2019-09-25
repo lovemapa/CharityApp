@@ -18,6 +18,7 @@ module.exports = (io) => {
         soc.chatList(socket, io) // get chat list of signed in user 
         soc.typing(socket, io) // user  is typing on other end
         soc.isRead(socket, io, socketInfo) // check if message is read
+        soc.userList(socket, io)
         soc.groupChatHistory(socket, io, room_members) // fetch group chat history
 
 
