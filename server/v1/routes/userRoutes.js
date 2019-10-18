@@ -79,7 +79,7 @@ userRoutes.route('/:id')
 userRoutes.route('/deleteUser/:id')
     .get((req, res) => {
         userRepo.deleteUser(req.params.id).then(result => {
-
+            
             return res.json({
                 success: Constant.TRUE, message: Constant.TRUEMSG, user: result
             })

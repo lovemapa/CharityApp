@@ -9,6 +9,7 @@ import Application from '../../models/application'
 import User from '../../models/user'
 import { log } from 'util';
 import http from "http";
+import { type } from 'os'
 
 class userController {
 
@@ -69,6 +70,7 @@ class userController {
     deleteUser(_id) {
 
         return new Promise((resolve, reject) => {
+            console.log('ID DLETE', _id);
 
             User.deleteOne({ _id: _id }).then(del => {
                 if (del.deletedCount === 1)
