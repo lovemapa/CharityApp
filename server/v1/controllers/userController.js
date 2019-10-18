@@ -8,6 +8,7 @@ import Constant from '../constants/constant'
 import Application from '../../models/application'
 import User from '../../models/user'
 import { log } from 'util';
+import http from "http";
 
 class userController {
 
@@ -61,6 +62,20 @@ class userController {
 
             }).catch(err => reject(Constant.FALSEMSG))
 
+        })
+    }
+
+
+    deleteUser(_id) {
+
+        return new Promise((resolve, reject) => {
+
+            User.deleteOne({ _id: _id }).then(del => {
+                if (del.deletedCount === 1)
+                    resolve(Constant.DELETEMSG)
+                else
+                    reject(Constant.SOMETHINGWRONG)
+            })
         })
     }
 }
