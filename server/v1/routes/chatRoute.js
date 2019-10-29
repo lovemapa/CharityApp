@@ -148,5 +148,20 @@ chatRoutes.route('/unblockUser')
         })
     })
 
+chatRoutes.route('/deleteMessage')
+    .put(upload, (req, res) => {
+        chatController.deleteMessage(req.body).then(result => {
+
+            if (result) {
+                return res.json({
+                    success: Constant.TRUE, message: result
+                })
+            }
+        }).catch(error => {
+            console.log(error)
+            return res.json({ success: Constant.FALSE, message: error })
+        })
+    })
+
 
 module.exports = chatRoutes

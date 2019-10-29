@@ -308,6 +308,24 @@ class socketController {
         })
     }
 
+
+    //online User
+    isOnline(socket, io) {
+        socket.on('isOnline', data => {
+
+            socket.broadcast.emit('broadcast', { isOnline: data.status, userId: data.userId });
+        })
+    }
+
+
+    deleteMessage(socket, io) {
+        socket.on('deleteMessage', data => {
+
+
+        })
+    }
+
+
     // Change Read Status of messages
 
     isRead(socket, io, socketInfo) {

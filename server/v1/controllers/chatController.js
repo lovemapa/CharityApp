@@ -274,6 +274,33 @@ class chatController {
             throw err
         })
     }
+
+
+    deleteMessage(data) {
+        return new Promise((resolve, reject) => {
+            if (!data.messageId) {
+                reject(Constant.PARAMSMISSING)
+            }
+            else {
+                messageModel.updateMany({
+                    _id: data.messageId
+                }, { $set: { is_deleted: true } }
+                ).then(result => {
+                    if (result)
+                        resolve(Constant.TRUE)
+                })
+                    .catch(error => {
+                        if ((error.name == 'ValidationError'))
+                            reject(Constant.OBJECTIDERROR)
+                        reject(error)
+                    })
+            }
+        }).catch(err => {
+            throw err
+        })
+
+
+    }
     unBlockUser(data) {
         return new Promise((resolve, reject) => {
             if (!data.userId && !data.opponentId) {

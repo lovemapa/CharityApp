@@ -39,6 +39,8 @@ class userController {
                 resolve(result)
 
             }).catch(err => {
+                console.log(err);
+
                 if (err.errors)
                     return reject(helper.handleValidation(err))
                 if (err.code === 11000)

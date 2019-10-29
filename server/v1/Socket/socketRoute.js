@@ -7,6 +7,7 @@ module.exports = (io) => {
     var rooms = [];
     var room_members = {}
     io.on('connection', function (socket) {
+        console.log("someone connected");
 
         socket.on('disconnect', function () {       //Disconnecting the socket
             delete socketInfo[socket.username];
@@ -19,6 +20,8 @@ module.exports = (io) => {
         soc.typing(socket, io) // user  is typing on other end
         soc.isRead(socket, io, socketInfo) // check if message is read
         soc.userList(socket, io)
+        soc.isOnline(socket, io)
+        soc.deleteMessage(socket, io)
         soc.groupChatHistory(socket, io, room_members) // fetch group chat history
 
 
