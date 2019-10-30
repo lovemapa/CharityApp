@@ -69,6 +69,21 @@ class userController {
     }
 
 
+    updateProfilePic(data) {
+
+        return new Promise((resolve, reject) => {
+            if (!data._id)
+                reject('Provide _id')
+            User.findByIdAndUpdate({ _id: data._id }, { $set: { profilePic: data.profilePic } }, {
+                new: true
+            }).then(update => {
+
+                resolve(update)
+
+            })
+        })
+    }
+
     deleteUser(_id) {
 
         return new Promise((resolve, reject) => {

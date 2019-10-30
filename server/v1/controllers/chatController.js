@@ -290,8 +290,6 @@ class chatController {
                         resolve(Constant.TRUE)
                 })
                     .catch(error => {
-                        if ((error.name == 'ValidationError'))
-                            reject(Constant.OBJECTIDERROR)
                         reject(error)
                     })
             }

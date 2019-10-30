@@ -111,7 +111,7 @@ class socketController {
     }
     //Get Chat History for one to one chat
 
-    chatHistory(socket, io, room_members) {
+    chatHistory(socket, io, room_members, socketInfo) {
         socket.on('chatHistory', (data) => {
             if (!data.opponentId && !data.userId) {
                 io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGCHATHISTORY });
@@ -137,8 +137,8 @@ class socketController {
                     }
 
                     messageModel.find({
-                        $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false }],
-                        message: { $ne: "" }
+                        $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false, "is_deleted": false }],
+                        message: { $ne: "" }, is_deleted: false
                     }).populate('from to').then(result => {
 
                         messageModel.updateMany({
@@ -150,7 +150,15 @@ class socketController {
                                     room_members[convId] = io.sockets.adapter.rooms[convId].sockets
                                 })
                             })
-                        io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, conversationId: convId });
+                        var isOnline;
+                        if (socketInfo.hasOwnProperty(result[0].to._id))
+                            isOnline = true
+                        else
+                            isOnline = false
+                                ;
+
+
+                        io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, isOnline: isOnline, conversationId: convId });
                     }).catch(err => {
                         if (err.name == 'ValidationError' || 'CastError')
                             io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
@@ -195,7 +203,7 @@ class socketController {
 
     // Get chatlist of a particular user
 
-    chatList(socket, io) {
+    chatList(socket, io, socketInfo) {
         socket.on('chatList', data => {
             var id = data.userId
             if (!id) {
@@ -285,8 +293,17 @@ class socketController {
                     },
                     { $sort: { "date": -1 } }
                 ]).then(result => {
+
+                    result.map(value => {
+                        if (socketInfo.hasOwnProperty(result[0].chatName._id))
+                            value.isOnline = true
+                        else
+                            value.isOnline = false
+                        return value
+                    })
                     io.to(socket.id).emit('chatList', { success: Constant.TRUE, chatList: result, message: Constant.TRUEMSG })
                 }).catch(err => {
+                    console.log(err);
 
                     if (err)
                         io.to(socket.id).emit('chatList', { success: Constant.FALSE, message: err })
@@ -310,18 +327,30 @@ class socketController {
 
 
     //online User
-    isOnline(socket, io) {
+    isOnline(socket, io, socketInfo) {
         socket.on('isOnline', data => {
 
-            socket.broadcast.emit('broadcast', { isOnline: data.status, userId: data.userId });
+            socket.broadcast.emit('broadcast', { isOnline: data.status, userId: data.userId, list: socketInfo });
         })
     }
 
 
     deleteMessage(socket, io) {
         socket.on('deleteMessage', data => {
-
-
+            if (!data.messageId)
+                io.to(socket.id).emit('deleteMessage', { success: Constant.FALSE, message: Constant.MESSAGEDELETE })
+            else {
+                messageModel.updateMany({
+                    _id: data.messageId
+                }, { $set: { is_deleted: true } }
+                ).then(result => {
+                    if (result)
+                        io.to(socket.id).emit('deleteMessage', { success: Constant.TRUE, message: Constant.DELETEMSG })
+                })
+                    .catch(error => {
+                        io.to(socket.id).emit('deleteMessage', { success: Constant.FALSE, message: error })
+                    })
+            }
         })
     }
 
