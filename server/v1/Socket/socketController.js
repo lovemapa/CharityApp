@@ -140,7 +140,8 @@ class socketController {
                     }
 
                     messageModel.find({
-                        $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false, "is_deleted": false }],
+                        $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] },
+                        { conversationId: convId, isBlocked: false, "is_deleted": false }],
                         message: { $ne: "" }, is_deleted: false
                     }).populate('from to').then(result => {
 
@@ -339,8 +340,13 @@ class socketController {
     activeUsers(socket, io, socketInfo) {
 
         socket.on('activeUsers', data => {
+            var activeUsers = []
+            for (var key in socketInfo) {
+                activeUsers.push(key)
+            }
 
-            io.to(socket.id).emit('activeUsers', { success: Constant.TRUE, activeUsers: socketInfo })
+
+            io.to(socket.id).emit('activeUsers', { success: Constant.TRUE, activeUsers: activeUsers })
         })
 
     }
