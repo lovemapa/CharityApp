@@ -312,7 +312,7 @@ class socketController {
                             value.isOnline = true
                         else
                             value.isOnline = false
-                        return value
+
                     })
                     io.to(socket.id).emit('chatList', { success: Constant.TRUE, chatList: result, message: Constant.TRUEMSG })
                 }).catch(err => {
