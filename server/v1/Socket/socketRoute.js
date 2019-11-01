@@ -15,6 +15,14 @@ module.exports = (io) => {
             console.log('disconnect', socketInfo, `${socket.username}`);
             io.emit(`${socket.username}_status`, { status: false });
 
+            var activeUsers = []
+            for (var key in socketInfo) {
+                activeUsers.push(key)
+            }
+            activeUsers.map(ids => {
+                io.to(ids).emit('chatList', { isOnline: Constant.FALSE })
+            })
+
         });
 
         soc.sendMessage(socket, io, socketInfo, room_members) //Send Message
