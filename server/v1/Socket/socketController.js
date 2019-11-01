@@ -336,6 +336,15 @@ class socketController {
     }
 
 
+    activeUsers(socket, io, socketInfo) {
+
+        socket.on('activeUsers', data => {
+
+            io.to(socket.id).emit('activeUsers', { success: Constant.TRUE, activeUsers: socketInfo })
+        })
+
+    }
+
     //online User
     isOnline(socket, io, socketInfo) {
         socket.on('isOnline', data => {

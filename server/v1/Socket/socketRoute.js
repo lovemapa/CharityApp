@@ -26,6 +26,7 @@ module.exports = (io) => {
         soc.userList(socket, io)
         soc.isOnline(socket, io, socketInfo)
         soc.deleteMessage(socket, io)
+        soc.activeUsers(socket, io, socketInfo)
         soc.groupChatHistory(socket, io, room_members) // fetch group chat history
 
 
