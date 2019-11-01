@@ -20,7 +20,7 @@ module.exports = (io) => {
                 activeUsers.push(key)
             }
             activeUsers.map(ids => {
-                io.to(ids).emit('chatList', { isOnline: Constant.FALSE })
+                io.to(socketInfo[ids]).emit('chatList', { isOnline: Constant.FALSE })
             })
 
         });
