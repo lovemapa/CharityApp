@@ -15,13 +15,14 @@ module.exports = (io) => {
             console.log('disconnect', socketInfo, `${socket.username}`);
             io.emit(`${socket.username}_status`, { status: false });
 
-            var activeUsers = []
-            for (var key in socketInfo) {
-                activeUsers.push(key)
-            }
-            activeUsers.map(ids => {
-                io.to(socketInfo[ids]).emit('chatList', { isOnline: Constant.FALSE })
-            })
+            // var activeUsers = []
+            // for (var key in socketInfo) {
+            //     activeUsers.push(key)
+            // }
+            // activeUsers.map(ids => {
+            //     io.to(socketInfo[ids]).emit('chatList', { isOnline: Constant.FALSE })
+            // })
+            soc.chatList(socket, io, socketInfo) // get chat list of signed in user 
 
         });
 
