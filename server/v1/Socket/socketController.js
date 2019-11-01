@@ -216,6 +216,8 @@ class socketController {
 
     chatList(socket, io, socketInfo) {
         socket.on('chatList', data => {
+            console.log('CHATLIST');
+
             var id = data.userId
             if (!id) {
                 io.to(socket.id).emit('chatList', { success: Constant.FALSE, message: Constant.PARAMSMISSING })
