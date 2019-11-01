@@ -1,7 +1,7 @@
 import socketController from '../Socket/socketController'
 import { log } from 'util';
 const soc = new socketController();
-
+import Constant from '../constants/constant'
 module.exports = (io) => {
     var socketInfo = {};
     var rooms = [];
