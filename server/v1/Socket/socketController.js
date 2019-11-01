@@ -142,7 +142,7 @@ class socketController {
                     messageModel.find({
                         $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] },
                         { conversationId: convId, isBlocked: false, "is_deleted": false }],
-                        message: { $ne: "" }, is_deleted: false
+                        message: { $ne: "" }
                     }).populate('from to').then(result => {
 
                         messageModel.updateMany({
