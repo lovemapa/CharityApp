@@ -46,7 +46,7 @@ const upload = multer({ storage: storage }).single('file')
 
 // Register User
 userRoutes.route('/register')
-    .post([auth, upload], (req, res) => {
+    .post([upload], (req, res) => {
 
         userRepo.register(req.body, req.file).then(result => {
 

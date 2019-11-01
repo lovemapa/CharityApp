@@ -17,6 +17,8 @@ class userController {
     register(data, file) {
 
         return new Promise((resolve, reject) => {
+            console.log(file);
+
             var profilePic = ''
             if (file)
                 profilePic = file.filename

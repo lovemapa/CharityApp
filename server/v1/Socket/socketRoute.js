@@ -9,8 +9,12 @@ module.exports = (io) => {
     io.on('connection', function (socket) {
         console.log("someone connected");
 
-        socket.on('disconnect', function () {       //Disconnecting the socket
+        socket.on('disconnect', function () {
+            //Disconnecting the socket
             delete socketInfo[socket.username];
+            console.log('disconnect', socketInfo, `${socket.username}`);
+            io.emit(`${socket.username}_status`, { status: false });
+
         });
 
         soc.sendMessage(socket, io, socketInfo, room_members) //Send Message

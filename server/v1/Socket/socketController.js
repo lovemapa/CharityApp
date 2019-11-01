@@ -96,6 +96,7 @@ class socketController {
             socket.username = user.userId
             socketInfo[user.userId] = socket.id;
             console.log(socketInfo);
+            io.emit(`${socket.username}_status`, { status: true });
 
         })
     }
@@ -113,6 +114,8 @@ class socketController {
 
     chatHistory(socket, io, room_members, socketInfo) {
         socket.on('chatHistory', (data) => {
+            console.log('ChatHistory');
+
             if (!data.opponentId && !data.userId) {
                 io.to(socket.id).emit('chatHistory', { success: Constant.FALSE, message: Constant.PARAMSMISSINGCHATHISTORY });
             }
@@ -151,15 +154,22 @@ class socketController {
                                 })
                             })
                         var isOnline;
-                        if (socketInfo.hasOwnProperty(result[0].to._id))
+                        // console.log(result[0]);
+
+
+                        if (socketInfo.hasOwnProperty(data.opponentId))
                             isOnline = true
                         else
                             isOnline = false
                                 ;
+                        console.log('this is the ID', socketInfo[data.opponentId]);
 
-
+                        console.log('chatHItory', socketInfo);
+                        io.to(socket.id).emit('isOnline', { isOnline: isOnline });
                         io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, isOnline: isOnline, conversationId: convId });
                     }).catch(err => {
+                        console.log(err);
+
                         if (err.name == 'ValidationError' || 'CastError')
                             io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
                         else
@@ -329,8 +339,15 @@ class socketController {
     //online User
     isOnline(socket, io, socketInfo) {
         socket.on('isOnline', data => {
-
-            socket.broadcast.emit('broadcast', { isOnline: data.status, userId: data.userId, list: socketInfo });
+            if (!data.opponentId) {
+                io.to(socket.id).emit('isOnline', { success: Constant.FALSE, message: Constant.OPPOMISSING });
+            }
+            var isOnline;
+            if (socketInfo.hasOwnProperty(data.opponentId))
+                isOnline = true
+            else
+                isOnline = false
+            io.to(socket.id).emit('isOnline', { isOnline: data.status, isOnline: isOnline });
         })
     }
 

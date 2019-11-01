@@ -19,6 +19,7 @@ let constant = {
     EXISTSMSG: 'associated with another account(Account already taken, try another)',
     PARAMSMISSING: 'Parameters Missing',
     CONVOMISSING: 'Conversation ID Missing',
+    OPPOMISSING: 'opponent ID Missing',
     MESSAGEDELETE: 'please provide array of message IDs to be deleted',
     PARAMSGROUPMISSING: `Provide group ID`,
     OBJECTIDERROR: 'Provide valid user ObjectIDs',
