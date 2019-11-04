@@ -9,21 +9,16 @@ module.exports = (io) => {
     io.on('connection', function (socket) {
         console.log("someone connected");
 
+
+
+
         socket.on('disconnect', function () {
             //Disconnecting the socket
             delete socketInfo[socket.username];
             console.log('disconnect', socketInfo, `${socket.username}`);
             io.emit(`${socket.username}_status`, { status: false });
 
-            // var activeUsers = []
-            // for (var key in socketInfo) {
-            //     activeUsers.push(key)
-            // }
-            // activeUsers.map(ids => {
-            //     io.to(socketInfo[ids]).emit('chatList', { isOnline: Constant.FALSE })
-            // })
-            soc.chatList(socket, io, socketInfo) // get chat list of signed in user 
-
+            io.emit('userOnline', { userId: socket.username, isOnline: Constant.FALSE })
         });
 
         soc.sendMessage(socket, io, socketInfo, room_members) //Send Message
@@ -33,6 +28,7 @@ module.exports = (io) => {
         soc.typing(socket, io) // user  is typing on other end
         soc.isRead(socket, io, socketInfo) // check if message is read
         soc.userList(socket, io)
+        soc.userOnline(socket, io, socketInfo)
         soc.isOnline(socket, io, socketInfo)
         soc.deleteMessage(socket, io)
         soc.activeUsers(socket, io, socketInfo)

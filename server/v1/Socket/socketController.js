@@ -99,6 +99,8 @@ class socketController {
             console.log(socketInfo);
             io.emit(`${socket.username}_status`, { status: true });
 
+            io.emit('userOnline', { userId: socket.username, isOnline: Constant.TRUE })
+
         })
     }
 
@@ -311,13 +313,14 @@ class socketController {
 
                     result.map(value => {
 
-
                         if (socketInfo.hasOwnProperty(value.chatName._id))
                             value.isOnline = true
                         else
                             value.isOnline = false
                         return value
                     })
+
+
 
                     io.to(socket.id).emit('chatList', { success: Constant.TRUE, chatList: result, message: Constant.TRUEMSG })
                 }).catch(err => {
@@ -355,6 +358,11 @@ class socketController {
 
             io.to(socket.id).emit('activeUsers', { success: Constant.TRUE, activeUsers: activeUsers })
         })
+
+    }
+
+
+    userOnline(socket, io, socketInfo) {
 
     }
 
