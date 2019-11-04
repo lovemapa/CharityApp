@@ -48,6 +48,7 @@ class socketController {
                                             obj.message = populatedData.message
                                             obj.messageType = populatedData.messageType
                                             obj.conversationId = populatedData.conversationId
+                                            obj.type = populatedData.type
                                             obj.chatName = result
                                             obj.unreadCount = 0
                                             io.to(socketInfo[value]).emit('listenMessage', { success: Constant.TRUE, result: obj })
