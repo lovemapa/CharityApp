@@ -29,6 +29,7 @@ let constant = {
     ALREADYBLOCKED: 'User is already blocked',
     UNBLOCKED: 'User is unblocked succesfully',
     BLOCKED: 'User is blocked Successfully',
+    FILEMISSING: 'Missing File',
 
     // Uploaded 
     USERIMAGE: 'static/users/',

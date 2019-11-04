@@ -9,7 +9,13 @@ import { log } from 'util'
 const storage = multer.diskStorage({
     destination: process.cwd() + "/public/uploads/",
     filename: function (req, file, cb) {
-
+        var extenstion = ''
+        if (file.mimetype == 'video/mp4')
+            extenstion = '.mp4'
+        else if (file.mimetype == 'audio/mpeg')
+            extenstion = '.mp3'
+        else
+            extenstion = '.jpeg'
         cb(
             null,
             rn({
@@ -19,11 +25,14 @@ const storage = multer.diskStorage({
             }) +
             "_" +
             Date.now() +
-            ".mp4"
+            extenstion
         );
     }
 });
+
+
 const upload = multer({ storage: storage }).single('file')
+
 let chatRoutes = express.Router()
 
 
@@ -106,6 +115,22 @@ chatRoutes.route('/uploadVideo')
             if (result) {
                 return res.json({
                     success: Constant.TRUE, message: result
+                })
+            }
+        }).catch(error => {
+            console.log(error)
+            return res.json({ success: Constant.FALSE, message: error })
+        })
+    })
+
+
+chatRoutes.route('/uploadMedia')
+    .post(upload, (req, res) => {
+        chatController.uploadMedia(req.file).then(result => {
+
+            if (result) {
+                return res.json({
+                    success: Constant.TRUE, message: Constant.success, data: result
                 })
             }
         }).catch(error => {

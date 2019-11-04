@@ -83,7 +83,8 @@ class socketController {
             conversationId: conversation_id,
             date: moment().valueOf(),
             readBy: data.from,
-            isBlocked: data.isBlocked
+            isBlocked: data.isBlocked,
+            media: data.media
         })
         return message;
     }

@@ -11,7 +11,7 @@ let singleChatSchema = new Schema({
     from: {
         type: Schema.Types.ObjectId, ref: 'user'        // sender
     },
-    type: { // image, video or text
+    type: { // image, video or //audio text 
         type: String,
     },
     conversationId: {                               // Conversation ID of chat(group or two users)
@@ -36,6 +36,9 @@ let singleChatSchema = new Schema({
     isBlocked: {
         type: Boolean,     //Status of those messages which are sent during Blocked by sender
         default: 0
+    },
+    media: {
+        type: String,  // media URL
     }
 
 });

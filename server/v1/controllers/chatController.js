@@ -238,6 +238,18 @@ class chatController {
         })
 
     }
+
+    uploadMedia(file) {
+        return new Promise((resolve, reject) => {
+            if (!file)
+                reject(Constant.FILEMISSING)
+            else
+                resolve('/' + file.filename)
+
+        })
+    }
+
+
     blockUser(data) {
         return new Promise((resolve, reject) => {
             if (!data.userId && !data.opponentId) {
