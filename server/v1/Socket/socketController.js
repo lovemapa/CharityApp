@@ -309,7 +309,7 @@ class socketController {
 
 
                     result.map(value => {
-                        console.log('value==', value.to._id, '====', value);
+                       
 
                         if (socketInfo.hasOwnProperty(value.to._id))
                             value.isOnline = true
