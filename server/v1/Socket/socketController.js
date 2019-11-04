@@ -309,9 +309,9 @@ class socketController {
 
 
                     result.map(value => {
-                       
 
-                        if (socketInfo.hasOwnProperty(value.to._id))
+
+                        if (socketInfo.hasOwnProperty(value.chatName._id))
                             value.isOnline = true
                         else
                             value.isOnline = false
