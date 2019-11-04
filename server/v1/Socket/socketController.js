@@ -309,13 +309,15 @@ class socketController {
 
 
                     result.map(value => {
+                        console.log('value==', socketInfo.hasOwnProperty(result[0].to._id), '====', value);
+
                         if (socketInfo.hasOwnProperty(result[0].to._id))
                             value.isOnline = true
                         else
                             value.isOnline = false
 
                     })
-                    console.log(socketInfo);
+
                     io.to(socket.id).emit('chatList', { success: Constant.TRUE, chatList: result, message: Constant.TRUEMSG })
                 }).catch(err => {
                     console.log(err);
