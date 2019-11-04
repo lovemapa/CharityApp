@@ -34,7 +34,7 @@ class socketController {
                         messageModel.populate(messageSchema, { path: "to from" }, function (err, populatedData) {
 
                             if (data.messageType == 'single') {
-                                populatedData.set('chatName', populatedData.to, { strict: false })
+                                populatedData.set('chatName', populatedData.from, { strict: false })
                                 io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
                             }
                             else {
