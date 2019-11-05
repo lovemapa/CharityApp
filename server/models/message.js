@@ -39,7 +39,11 @@ let singleChatSchema = new Schema({
     },
     media: {
         type: String,  // media URL
+    },
+    duration: {
+        type: String,  // audio Duration
     }
+
 
 });
 

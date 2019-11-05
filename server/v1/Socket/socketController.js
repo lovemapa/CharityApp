@@ -85,7 +85,8 @@ class socketController {
             date: moment().valueOf(),
             readBy: data.from,
             isBlocked: data.isBlocked,
-            media: data.media
+            media: data.media,
+            duration: data.duration
         })
         return message;
     }
