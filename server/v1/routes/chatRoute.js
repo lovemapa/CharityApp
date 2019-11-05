@@ -3,12 +3,16 @@ import multer from 'multer'
 import Constant from '../constants/constant'
 import chatController from '../controllers/chatController'
 import rn from 'random-number'
+import path from 'path'
 import { log } from 'util'
+import { pathMatch } from 'tough-cookie'
 
 // for Media upload send during chatting
 const storage = multer.diskStorage({
     destination: process.cwd() + "/public/uploads/",
     filename: function (req, file, cb) {
+        console.log(file);
+
         var extenstion = ''
         if (file.mimetype == 'video/mp4')
             extenstion = '.mp4'
@@ -18,14 +22,8 @@ const storage = multer.diskStorage({
             extenstion = '.jpeg'
         cb(
             null,
-            rn({
-                min: 1001,
-                max: 9999,
-                integer: true
-            }) +
-            "_" +
             Date.now() +
-            extenstion
+            path.extname(file.originalname)
         );
     }
 });
