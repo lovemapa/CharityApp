@@ -41,7 +41,7 @@ class notiController {
                             title: 'Message',
                             body: msg,
 
-                            notiData: data,
+
                             date: moment().valueOf()
                         }
                     };
@@ -53,7 +53,7 @@ class notiController {
                             title: 'Tyrell',
                             body: msg,
 
-                            notiData: data,
+
                             date: moment().valueOf()
                         },
                         data: {  //you can send only notification or only data(or include both)
