@@ -8,7 +8,9 @@ import userModel from '../../models/user'
 import conversation from "../../models/conversation";
 import moment from 'moment'
 import blockModel from "../../models/block";
+import noficationController from "../controllers/notificationController"
 
+const notif = new noficationController()
 
 class socketController {
 
@@ -35,7 +37,9 @@ class socketController {
 
                             if (data.messageType == 'single') {
                                 populatedData.set('chatName', populatedData.from, { strict: false })
+
                                 io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
+                                notif.sendUserNotification(data.from, data.to, populatedData)
                             }
                             else {
                                 groupModel.findOne({ _id: data.groupId }).then(result => {
