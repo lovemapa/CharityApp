@@ -74,7 +74,7 @@ class notiController {
                     }
                 });
             }
-        }).catch(err => console.log('queryerror'))
+        }).catch(err => console.log('queryerror', err))
     }
     sendNotiAdmin(adminId, data, msg, type) {
         Customer.findById(adminId).then((result) => {
