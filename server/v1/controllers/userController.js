@@ -86,6 +86,21 @@ class userController {
         })
     }
 
+    updateDeviceId(data) {
+        return new Promise((resolve, reject) => {
+            if (!data.userId)
+                reject('Provide userId')
+            User.findOneAndUpdate({ _id: data.userId }, { $set: { deviceId: data.deviceId } }, {
+                new: true
+            }).then(update => {
+
+
+                resolve(update)
+
+            })
+        })
+    }
+
     deleteUser(_id) {
 
         return new Promise((resolve, reject) => {

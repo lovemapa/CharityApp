@@ -21,7 +21,9 @@ let userSchema = new Schema({
         type: String,       //Profile Picture
     },
     appId: { type: Schema.Types.ObjectId, ref: 'Application' },
-
+    deviceId: {
+        type: String,
+    },
 
 },
     {

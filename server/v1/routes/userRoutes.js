@@ -76,6 +76,8 @@ userRoutes.route('/:id')
     })
 
 
+
+
 userRoutes.route('/deleteUser/:id')
     .get((req, res) => {
         userRepo.deleteUser(req.params.id).then(result => {
@@ -106,5 +108,20 @@ userRoutes.route('/updateProfilePic')
         })
     })
 
+
+userRoutes.route('/updateDeviceId')
+    .put((req, res) => {
+        userRepo.updateDeviceId(req.body).then(result => {
+
+            return res.json({
+                success: Constant.TRUE, message: Constant.UPDATEMSG, user: result
+            })
+
+        }).catch(error => {
+            console.log(error);
+
+            return res.json({ success: Constant.FALSE, message: error })
+        })
+    })
 
 export default userRoutes
