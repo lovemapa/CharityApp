@@ -90,7 +90,7 @@ class userController {
         return new Promise((resolve, reject) => {
             if (!data.userId)
                 reject('Provide userId')
-            User.findOneAndUpdate({ _id: data.userId }, { $set: { deviceId: data.deviceId } }, {
+            User.findOneAndUpdate({ _id: data.userId }, { $set: { deviceId: data.deviceId, deviceType: data.deviceType } }, {
                 new: true
             }).then(update => {
 

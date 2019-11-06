@@ -24,7 +24,10 @@ let userSchema = new Schema({
     deviceId: {
         type: String,
     },
+    deviceType: {
+        type: String
 
+    }
 },
     {
         toObject: { virtuals: true },
