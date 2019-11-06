@@ -39,6 +39,8 @@ class socketController {
                                 populatedData.set('chatName', populatedData.from, { strict: false })
 
                                 io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
+                                console.log('sendMEssage', populatedData);
+
                                 notif.sendUserNotification(data.from, data.to, populatedData)
                             }
                             else {
