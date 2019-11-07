@@ -40,8 +40,8 @@ class socketController {
 
                                 io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
                                 console.log('sendMEssage', populatedData);
-
-                                notif.sendUserNotification(data.from, data.to, populatedData)
+                                let msg = populatedData.message
+                                notif.sendUserNotification(data.from, data.to, msg, populatedData, 1)
                             }
                             else {
                                 groupModel.findOne({ _id: data.groupId }).then(result => {

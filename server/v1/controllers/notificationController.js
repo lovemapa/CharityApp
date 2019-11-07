@@ -12,59 +12,28 @@ class notiController {
 
 
     // sendUserNotification(userId, opponentId, type, msg, data) {
-    sendUserNotification(userId, opponentId, msg) {
+    sendUserNotification(userId, opponentId, msg, data, type) {
 
-
-        // if (type != 53) {
-        //     let noti = new DriverAlert({
-        //         adminId: adminId,
-        //         driverId: id,
-        //         notiType: type,
-        //         message: msg,
-        //         date: moment().valueOf()
-        //     })
-        //     if(userId) noti.userId = userId
-        //     noti.save().then({})
-        // }
-        console.log('userId===', userId);
-        console.log('opponentId===', opponentId);
-        console.log('msg===', msg);
-
-        User.findById(userId).then(user => {
+        User.findById(opponentId).then(user => {
 
             if (user.deviceId) {
-                if (user.deviceType == 'android') {
-
-                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-                        to: user.deviceId,
-                        data: {  //you can send only notification or only data(or include both)
-                            title: 'Message',
-                            body: msg,
-
-
-                            date: moment().valueOf()
-                        }
-                    };
-                } else {
-
-                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-                        to: user.deviceId,
-                        notification: {
-                            title: 'Tyrell',
-                            body: msg,
-
-
-                            date: moment().valueOf()
-                        },
-                        data: {  //you can send only notification or only data(or include both)
-                            title: 'Tyrell',
-                            body: msg,
-                            type: type,
-                            notiData: data,
-                            date: moment().valueOf()
-                        }
-                    };
-                }
+                var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
+                    to: user.deviceId,
+                    notification: {
+                        title: 'New Message',
+                        body: msg,
+                        type: type,
+                        notiData: data,
+                        date: moment().valueOf()
+                    },
+                    data: {  //you can send only notification or only data(or include both)
+                        title: 'New Message',
+                        body: msg,
+                        type: type,
+                        notiData: data,
+                        date: moment().valueOf()
+                    }
+                };
 
                 fcm.send(message, function (err, response) {
                     if (err) {
@@ -75,109 +44,6 @@ class notiController {
                 });
             }
         }).catch(err => console.log('queryerror', err))
-    }
-    sendNotiAdmin(adminId, data, msg, type) {
-        Customer.findById(adminId).then((result) => {
-
-            if (result.deviceId) {
-                var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-                    to: result.deviceId,
-                    data: {  //you can send only notification or only data(or include both)
-                        title: 'Tyrell',
-                        body: msg,
-                        type: type,
-                        notiData: data,
-                        date: moment().valueOf()
-                    }
-                };
-
-
-                fcm.send(message, function (err, response) {
-                    if (err) {
-                        console.log("Something has gone wrong!" + err);
-                    } else {
-                        console.log("Successfully sent with response: ", response);
-                    }
-                });
-            }
-
-        }).catch((err) => {
-            console.log(err)
-        })
-    }
-
-
-    sendUserAdminNoti(adminId, msg) {
-        return new Promise((done, reject) => {
-
-            User.find({ status: 1, adminId: adminId }).select("+deviceId").then(users => {
-
-                let Arr = []
-                let iosArr = []
-                users.map(val => {
-                    if (val.deviceId) {
-                        if (val.deviceType == 'Android')
-                            Arr.push(val.deviceId)
-                        else
-                            iosArr.push(val.deviceId)
-                    }
-
-                })
-
-                if (Arr.length > 0) {
-
-                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-                        registration_ids: Arr,
-                        data: {  //you can send only notification or only data(or include both)
-                            title: 'Tyrell',
-                            body: msg,
-                            type: 10,
-                            notiData: {},
-                            date: moment().valueOf()
-                        }
-                    };
-
-                    fcm.send(message, function (err, response) {
-                        if (err) {
-                            console.log("Something has gone wrong!" + err);
-                        } else {
-                            console.log("Successfully sent with response: ", response);
-                            done('success')
-                        }
-                    });
-                }
-                if (iosArr.length > 0) {
-                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
-                        registration_ids: iosArr,
-
-                        notification: {
-                            title: 'Tyrell',
-                            body: msg,
-                            type: 10,
-                            notiData: {},
-                            date: moment().valueOf()
-                        },
-
-                        data: {  //you can send only notification or only data(or include both)
-                            title: 'Tyrell',
-                            body: msg,
-                            type: 10,
-                            notiData: {},
-                            date: moment().valueOf()
-                        }
-                    };
-
-                    fcm.send(message, function (err, response) {
-                        if (err) {
-                            console.log("Something has gone wrong!" + err);
-                        } else {
-                            console.log("Successfully sent with response: ", response);
-                            done('success')
-                        }
-                    });
-                }
-            })
-        })
     }
 
 }
