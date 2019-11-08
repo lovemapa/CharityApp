@@ -12,7 +12,7 @@ class notiController {
 
 
     // sendUserNotification(userId, opponentId, type, msg, data) {
-    sendUserNotification(userId, opponentId, msg, data, type) {
+    sendUserNotification(userId, opponentId, msg, data, type,name) {
 
         User.findById(opponentId).then(user => {
 
@@ -20,15 +20,17 @@ class notiController {
                 var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera)
                     to: user.deviceId,
                     notification: {
-                        title: 'New Message',
-                        body: msg,
+                        title: 'Like Minded',
+                        body:name+' sent you a message '+ msg,
+			username:name,
                         type: type,
                         notiData: data,
                         date: moment().valueOf()
                     },
                     data: {  //you can send only notification or only data(or include both)
-                        title: 'New Message',
-                        body: msg,
+                        title: 'Like Minded',
+                        body: name+' sent you a message '+msg,
+			username:name,
                         type: type,
                         notiData: data,
                         date: moment().valueOf()
