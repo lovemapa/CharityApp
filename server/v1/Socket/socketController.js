@@ -41,7 +41,7 @@ class socketController {
                                 io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
                                 console.log('sendMEssage', populatedData);
                                 let msg = populatedData.message
-                                notif.sendUserNotification(data.from, data.to, msg, populatedData, 1)
+                                notif.sendUserNotification(data.from, data.to, msg, populatedData, 1, populatedData.from.firstName + ' ' + populatedData.from.lastName)
                             }
                             else {
                                 groupModel.findOne({ _id: data.groupId }).then(result => {
@@ -227,7 +227,7 @@ class socketController {
 
     chatList(socket, io, socketInfo) {
         socket.on('chatList', data => {
-            console.log('CHATLIST');
+            console.log('CHATLIST', data);
 
             var id = data.userId
             if (!id) {
@@ -295,7 +295,6 @@ class socketController {
                             "date": { $last: "$date" },
                             unreadCount: { $sum: { $cond: { if: { $in: [Mongoose.Types.ObjectId(id), "$readBy"] }, then: 0, else: 1 } } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
 
-
                         }
                     }, {
                         $project: {
@@ -320,7 +319,7 @@ class socketController {
 
 
                     result.map(value => {
-
+                        console.log(value)
                         if (socketInfo.hasOwnProperty(value.chatName._id))
                             value.isOnline = true
                         else
