@@ -1,7 +1,9 @@
 import socketController from '../Socket/socketController'
 import { log } from 'util';
+import moment from 'moment'
 const soc = new socketController();
 import Constant from '../constants/constant'
+
 module.exports = (io) => {
     var socketInfo = {};
     var rooms = [];
@@ -9,16 +11,15 @@ module.exports = (io) => {
     io.on('connection', function (socket) {
         console.log("someone connected");
 
-
-
-
         socket.on('disconnect', function () {
             //Disconnecting the socket
+            soc.addOnlineTime(socket.username).then({})
             delete socketInfo[socket.username];
             console.log('disconnect', socketInfo, `${socket.username}`);
-            io.emit(`${socket.username}_status`, { status: false });
+            io.emit(`${socket.username}_status`, { status: false, onlineTime:moment().valueOf() });
 
-            io.emit('userOnline', { userId: socket.username, isOnline: Constant.FALSE })
+            io.emit('userOnline', { userId: socket.username, isOnline: Constant.FALSE, onlineTime:moment().valueOf() })
+            
         });
 
         soc.sendMessage(socket, io, socketInfo, room_members) //Send Message

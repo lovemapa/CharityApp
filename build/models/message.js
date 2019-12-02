@@ -21,7 +21,7 @@ var singleChatSchema = new _mongoose.Schema({
     from: {
         type: _mongoose.Schema.Types.ObjectId, ref: 'user' // sender
     },
-    type: { // image, video or text
+    type: { // image, video or //audio text 
         type: String
     },
     conversationId: { // Conversation ID of chat(group or two users)
@@ -46,6 +46,12 @@ var singleChatSchema = new _mongoose.Schema({
     isBlocked: {
         type: Boolean, //Status of those messages which are sent during Blocked by sender
         default: 0
+    },
+    media: {
+        type: String // media URL
+    },
+    duration: {
+        type: String // audio Duration
     }
 
 });

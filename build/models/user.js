@@ -29,8 +29,20 @@ var userSchema = new _mongoose.Schema({
     profilePic: {
         type: String //Profile Picture
     },
-    appId: { type: _mongoose.Schema.Types.ObjectId, ref: 'Application' }
-
+    appId: { type: _mongoose.Schema.Types.ObjectId, ref: 'Application' },
+    deviceId: {
+        type: String
+    },
+    deviceType: {
+        type: String
+    },
+    onlineStatus: {
+        type: Number,
+        default: 0
+    },
+    lastOnline: {
+        type: Number
+    }
 }, {
     toObject: { virtuals: true },
     toJSON: { virtuals: true }

@@ -53,6 +53,8 @@ var userController = function () {
         value: function register(data, file) {
 
             return new Promise(function (resolve, reject) {
+                console.log(file);
+
                 var profilePic = '';
                 if (file) profilePic = file.filename;else profilePic = 'download.png';
                 var user = new _user2.default({
@@ -69,6 +71,8 @@ var userController = function () {
 
                     resolve(result);
                 }).catch(function (err) {
+                    console.log(err);
+
                     if (err.errors) return reject(helper.handleValidation(err));
                     if (err.code === 11000) return reject(_constant2.default.EXISTSMSG);
 
@@ -88,6 +92,33 @@ var userController = function () {
                     resolve(result);
                 }).catch(function (err) {
                     return reject(_constant2.default.FALSEMSG);
+                });
+            });
+        }
+    }, {
+        key: 'updateProfilePic',
+        value: function updateProfilePic(data) {
+
+            return new Promise(function (resolve, reject) {
+                if (!data._id) reject('Provide _id');
+                _user2.default.findByIdAndUpdate({ _id: data._id }, { $set: { profilePic: data.profilePic } }, {
+                    new: true
+                }).then(function (update) {
+
+                    resolve(update);
+                });
+            });
+        }
+    }, {
+        key: 'updateDeviceId',
+        value: function updateDeviceId(data) {
+            return new Promise(function (resolve, reject) {
+                if (!data.userId) reject('Provide userId');
+                _user2.default.findOneAndUpdate({ _id: data.userId }, { $set: { deviceId: data.deviceId, deviceType: data.deviceType } }, {
+                    new: true
+                }).then(function (update) {
+
+                    resolve(update);
                 });
             });
         }

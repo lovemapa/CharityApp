@@ -31,20 +31,18 @@ class socketController {
                         io.to(socket.id).emit('sendMessage', { success: Constant.TRUE, result: result, message: Constant.BLOCKMESSAGE })
                     }
                     else {
-
                         messageModel.populate(messageSchema, { path: "to from" }, function (err, populatedData) {
 
                             if (data.messageType == 'single') {
                                 populatedData.set('chatName', populatedData.from, { strict: false })
 
                                 io.to(socketInfo[data.to]).emit('listenMessage', { success: Constant.TRUE, result: populatedData })
-                                console.log('sendMEssage', populatedData);
+                             
                                 let msg = populatedData.message
                                 notif.sendUserNotification(data.from, data.to, msg, populatedData, 1, populatedData.from.firstName + ' ' + populatedData.from.lastName)
                             }
                             else {
                                 groupModel.findOne({ _id: data.groupId }).then(result => {
-                                    console.log('Group send Message', socketInfo);
                                     result.members.map(value => {
                                         if (String(value) != String(populatedData.from._id)) {
                                             populatedData.set('chatName', result, { strict: false })
@@ -103,11 +101,9 @@ class socketController {
             console.log('add');
             socket.username = user.userId
             socketInfo[user.userId] = socket.id;
-            console.log(socketInfo);
-            io.emit(`${socket.username}_status`, { status: true });
-
-            io.emit('userOnline', { userId: socket.username, isOnline: Constant.TRUE })
-
+            io.emit(`${socket.username}_status`, { status: true, onlineTime:moment().valueOf() });
+            io.emit('userOnline', { userId: socket.username, isOnline: Constant.TRUE, onlineTime:moment().valueOf() })
+            this.addOnlineTime(socket.username).then({})
         })
     }
 
@@ -172,14 +168,9 @@ class socketController {
                             isOnline = true
                         else
                             isOnline = false
-                                ;
-                        console.log('this is the ID', socketInfo[data.opponentId]);
-
-                        console.log('chatHItory', socketInfo);
                         io.to(socket.id).emit('isOnline', { isOnline: isOnline });
                         io.to(socket.id).emit('chatHistory', { success: Constant.TRUE, message: result, isOnline: isOnline, conversationId: convId });
                     }).catch(err => {
-                        console.log(err);
 
                         if (err.name == 'ValidationError' || 'CastError')
                             io.to(socket.id).emit('chatHistory', { error: Constant.OBJECTIDERROR, success: Constant.FALSE })
@@ -204,7 +195,6 @@ class socketController {
 
                     socket.join(data.groupId, function () {
                         room_members[data.groupId] = io.sockets.adapter.rooms[data.groupId].sockets
-                        console.log(room_members);
 
                     })
 
@@ -226,7 +216,6 @@ class socketController {
 
     chatList(socket, io, socketInfo) {
         socket.on('chatList', data => {
-            console.log('CHATLIST');
 
             var id = data.userId
             if (!id) {
@@ -294,7 +283,6 @@ class socketController {
                             "date": { $last: "$date" },
                             unreadCount: { $sum: { $cond: { if: { $in: [Mongoose.Types.ObjectId(id), "$readBy"] }, then: 0, else: 1 } } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
 
-
                         }
                     }, {
                         $project: {
@@ -319,7 +307,6 @@ class socketController {
 
 
                     result.map(value => {
-
                         if (socketInfo.hasOwnProperty(value.chatName._id))
                             value.isOnline = true
                         else
@@ -376,15 +363,20 @@ class socketController {
     //online User
     isOnline(socket, io, socketInfo) {
         socket.on('isOnline', data => {
+            console.log(data,'isOnline')
             if (!data.opponentId) {
                 io.to(socket.id).emit('isOnline', { success: Constant.FALSE, message: Constant.OPPOMISSING });
-            }
+            }else{
             var isOnline;
             if (socketInfo.hasOwnProperty(data.opponentId))
                 isOnline = true
             else
                 isOnline = false
-            io.to(socket.id).emit('isOnline', { isOnline: data.status, isOnline: isOnline });
+            userModel.findById(data.opponentId).then( user=>{
+                console.log(user)
+                io.to(socket.id).emit('isOnline', { isOnline: data.status, isOnline: isOnline, onlineTime:user.lastOnline });
+            })
+        }
         })
     }
 
@@ -429,6 +421,15 @@ class socketController {
     }
 
 
+    addOnlineTime(userId){
+        return new Promise( (resolve,reject)=>{
+            if(userId){
+                userModel.findByIdAndUpdate(userId,{lastOnline:moment().valueOf()},{new:true} ).then( result=>{
+                    resolve(result)
+                }).catch( err=> console.log(err))
+            }
+        })
+    }
 
 
 }

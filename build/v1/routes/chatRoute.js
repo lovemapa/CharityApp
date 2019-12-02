@@ -20,7 +20,13 @@ var _randomNumber = require('random-number');
 
 var _randomNumber2 = _interopRequireDefault(_randomNumber);
 
+var _path = require('path');
+
+var _path2 = _interopRequireDefault(_path);
+
 var _util = require('util');
+
+var _toughCookie = require('tough-cookie');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28,15 +34,16 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var storage = _multer2.default.diskStorage({
     destination: process.cwd() + "/public/uploads/",
     filename: function filename(req, file, cb) {
+        console.log(file);
 
-        cb(null, (0, _randomNumber2.default)({
-            min: 1001,
-            max: 9999,
-            integer: true
-        }) + "_" + Date.now() + ".mp4");
+        var extenstion = '';
+        if (file.mimetype == 'video/mp4') extenstion = '.mp4';else if (file.mimetype == 'audio/mpeg') extenstion = '.mp3';else extenstion = '.jpeg';
+        cb(null, Date.now() + _path2.default.extname(file.originalname));
     }
 });
+
 var upload = (0, _multer2.default)({ storage: storage }).single('file');
+
 var chatRoutes = _express2.default.Router();
 
 // Create Group
@@ -120,6 +127,20 @@ chatRoutes.route('/uploadVideo').post(upload, function (req, res) {
     });
 });
 
+chatRoutes.route('/uploadMedia').post(upload, function (req, res) {
+    _chatController2.default.uploadMedia(req.file).then(function (result) {
+
+        if (result) {
+            return res.json({
+                success: _constant2.default.TRUE, message: _constant2.default.success, data: result
+            });
+        }
+    }).catch(function (error) {
+        console.log(error);
+        return res.json({ success: _constant2.default.FALSE, message: error });
+    });
+});
+
 //Blocking the user in one to one conversation
 
 chatRoutes.route('/blockUser').post(upload, function (req, res) {
@@ -140,6 +161,20 @@ chatRoutes.route('/blockUser').post(upload, function (req, res) {
 
 chatRoutes.route('/unblockUser').post(upload, function (req, res) {
     _chatController2.default.unBlockUser(req.body).then(function (result) {
+
+        if (result) {
+            return res.json({
+                success: _constant2.default.TRUE, message: result
+            });
+        }
+    }).catch(function (error) {
+        console.log(error);
+        return res.json({ success: _constant2.default.FALSE, message: error });
+    });
+});
+
+chatRoutes.route('/deleteMessage').put(upload, function (req, res) {
+    _chatController2.default.deleteMessage(req.body).then(function (result) {
 
         if (result) {
             return res.json({

@@ -249,6 +249,13 @@ var chatController = function () {
             });
         }
     }, {
+        key: 'uploadMedia',
+        value: function uploadMedia(file) {
+            return new Promise(function (resolve, reject) {
+                if (!file) reject(_constant2.default.FILEMISSING);else resolve('/' + file.filename);
+            });
+        }
+    }, {
         key: 'blockUser',
         value: function blockUser(data) {
             return new Promise(function (resolve, reject) {
@@ -273,6 +280,25 @@ var chatController = function () {
                         }
                     }).catch(function (error) {
                         if (error.name == 'ValidationError' || 'CastError') reject(_constant2.default.OBJECTIDERROR);
+                        reject(error);
+                    });
+                }
+            }).catch(function (err) {
+                throw err;
+            });
+        }
+    }, {
+        key: 'deleteMessage',
+        value: function deleteMessage(data) {
+            return new Promise(function (resolve, reject) {
+                if (!data.messageId) {
+                    reject(_constant2.default.PARAMSMISSING);
+                } else {
+                    _message2.default.updateMany({
+                        _id: data.messageId
+                    }, { $set: { is_deleted: true } }).then(function (result) {
+                        if (result) resolve(_constant2.default.TRUE);
+                    }).catch(function (error) {
                         reject(error);
                     });
                 }

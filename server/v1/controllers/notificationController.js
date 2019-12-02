@@ -1,6 +1,4 @@
 var FCM = require('fcm-node');
-var serverKey1 = 'AIzaSyDMMlrn_SJpJJEWtffnhywbjlk_W_fd9bQ'; //put your server key here
-var serverKey = 'AAAAzWtUPk8:APA91bHkfptLjny4EANT1jS_rRMJSoQnxi53v1yiz8UAzr_kSDK0hP9khlYBR3bj-KR19MzpqxR6STE0ztCel6jiqfx1ecwv-QOEHsTLN7Ji6VamvDLZ82Bx8MwV_Amjsl8I-gSqsVuL'
 let server2 = 'AIzaSyDNEF5K8ln7ogo12Hct4lj_BjXX_DAOnWU'
 var fcm = new FCM(server2);
 import User from '../../models/user'
@@ -23,6 +21,7 @@ class notiController {
                         title: 'Like Minded',
                         body:name+' sent you a message '+ msg,
 			username:name,
+                        body: msg,
                         type: type,
                         notiData: data,
                         date: moment().valueOf()
@@ -31,6 +30,7 @@ class notiController {
                         title: 'Like Minded',
                         body: name+' sent you a message '+msg,
 			username:name,
+                        body: msg,
                         type: type,
                         notiData: data,
                         date: moment().valueOf()

@@ -26,8 +26,14 @@ let userSchema = new Schema({
     },
     deviceType: {
         type: String
-
-    }
+    },
+    onlineStatus:{
+        type: Number,
+        default:0
+    },
+    lastOnline: {
+        type: Number
+    },
 },
     {
         toObject: { virtuals: true },

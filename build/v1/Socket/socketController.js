@@ -36,9 +36,17 @@ var _block = require('../../models/block');
 
 var _block2 = _interopRequireDefault(_block);
 
+var _notificationController = require('../controllers/notificationController');
+
+var _notificationController2 = _interopRequireDefault(_notificationController);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var notif = new _notificationController2.default();
 
 var socketController = function () {
     function socketController() {
@@ -60,20 +68,21 @@ var socketController = function () {
 
                     var messageSchema = _this.createMessageSchema(data, data.conversationId);
 
-                    _util.log;
                     messageSchema.save().then(function (result) {
                         if (block) {
                             io.to(socket.id).emit('sendMessage', { success: _constant2.default.TRUE, result: result, message: _constant2.default.BLOCKMESSAGE });
                         } else {
-
                             _message2.default.populate(messageSchema, { path: "to from" }, function (err, populatedData) {
 
                                 if (data.messageType == 'single') {
-                                    populatedData.set('chatName', populatedData.to, { strict: false });
+                                    populatedData.set('chatName', populatedData.from, { strict: false });
+
                                     io.to(socketInfo[data.to]).emit('listenMessage', { success: _constant2.default.TRUE, result: populatedData });
+
+                                    var msg = populatedData.message;
+                                    notif.sendUserNotification(data.from, data.to, msg, populatedData, 1, populatedData.from.firstName + ' ' + populatedData.from.lastName);
                                 } else {
                                     _group2.default.findOne({ _id: data.groupId }).then(function (result) {
-                                        console.log('Group send Message', socketInfo);
                                         result.members.map(function (value) {
                                             if (String(value) != String(populatedData.from._id)) {
                                                 populatedData.set('chatName', result, { strict: false });
@@ -82,6 +91,7 @@ var socketController = function () {
                                                 obj.message = populatedData.message;
                                                 obj.messageType = populatedData.messageType;
                                                 obj.conversationId = populatedData.conversationId;
+                                                obj.type = populatedData.type;
                                                 obj.chatName = result;
                                                 obj.unreadCount = 0;
                                                 io.to(socketInfo[value]).emit('listenMessage', { success: _constant2.default.TRUE, result: obj });
@@ -115,7 +125,9 @@ var socketController = function () {
                 conversationId: conversation_id,
                 date: (0, _moment2.default)().valueOf(),
                 readBy: data.from,
-                isBlocked: data.isBlocked
+                isBlocked: data.isBlocked,
+                media: data.media,
+                duration: data.duration
             });
             return message;
         }
@@ -125,11 +137,15 @@ var socketController = function () {
     }, {
         key: 'addUsername',
         value: function addUsername(socket, io, socketInfo) {
+            var _this2 = this;
+
             socket.on('add', function (user) {
                 console.log('add');
                 socket.username = user.userId;
                 socketInfo[user.userId] = socket.id;
-                console.log(socketInfo);
+                io.emit(socket.username + '_status', { status: true, onlineTime: (0, _moment2.default)().valueOf() });
+                io.emit('userOnline', { userId: socket.username, isOnline: _constant2.default.TRUE, onlineTime: (0, _moment2.default)().valueOf() });
+                _this2.addOnlineTime(socket.username).then({});
             });
         }
     }, {
@@ -145,8 +161,10 @@ var socketController = function () {
 
     }, {
         key: 'chatHistory',
-        value: function chatHistory(socket, io, room_members) {
+        value: function chatHistory(socket, io, room_members, socketInfo) {
             socket.on('chatHistory', function (data) {
+                console.log('ChatHistory');
+
                 if (!data.opponentId && !data.userId) {
                     io.to(socket.id).emit('chatHistory', { success: _constant2.default.FALSE, message: _constant2.default.PARAMSMISSINGCHATHISTORY });
                 } else {
@@ -168,8 +186,8 @@ var socketController = function () {
                         }
 
                         _message2.default.find({
-                            $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false }],
-                            message: { $ne: "" }
+                            $or: [{ $and: [{ isBlocked: true }, { from: data.userId }] }, { conversationId: convId, isBlocked: false, "is_deleted": false }]
+                            // message: { $ne: "" }
                         }).populate('from to').then(function (result) {
 
                             _message2.default.updateMany({
@@ -180,8 +198,15 @@ var socketController = function () {
                                     room_members[convId] = io.sockets.adapter.rooms[convId].sockets;
                                 });
                             });
-                            io.to(socket.id).emit('chatHistory', { success: _constant2.default.TRUE, message: result, conversationId: convId });
+                            var isOnline;
+                            // console.log(result[0]);
+
+
+                            if (socketInfo.hasOwnProperty(data.opponentId)) isOnline = true;else isOnline = false;
+                            io.to(socket.id).emit('isOnline', { isOnline: isOnline });
+                            io.to(socket.id).emit('chatHistory', { success: _constant2.default.TRUE, message: result, isOnline: isOnline, conversationId: convId });
                         }).catch(function (err) {
+
                             if (err.name == 'ValidationError' || 'CastError') io.to(socket.id).emit('chatHistory', { error: _constant2.default.OBJECTIDERROR, success: _constant2.default.FALSE });else io.to(socket.id).emit('chatHistory', { success: _constant2.default.FALSE, message: err });
                         });
                     });
@@ -203,7 +228,6 @@ var socketController = function () {
 
                         socket.join(data.groupId, function () {
                             room_members[data.groupId] = io.sockets.adapter.rooms[data.groupId].sockets;
-                            console.log(room_members);
                         });
 
                         _message2.default.find({ conversationId: data.groupId, message: { $ne: "" } }).populate('from').then(function (result) {
@@ -221,8 +245,9 @@ var socketController = function () {
 
     }, {
         key: 'chatList',
-        value: function chatList(socket, io) {
+        value: function chatList(socket, io, socketInfo) {
             socket.on('chatList', function (data) {
+
                 var id = data.userId;
                 if (!id) {
                     io.to(socket.id).emit('chatList', { success: _constant2.default.FALSE, message: _constant2.default.PARAMSMISSING });
@@ -276,7 +301,6 @@ var socketController = function () {
                             "date": { $last: "$date" },
                             unreadCount: { $sum: { $cond: { if: { $in: [_mongoose2.default.Types.ObjectId(id), "$readBy"] }, then: 0, else: 1 } } //{ $cond: { if: "$readBy", then: "$to", else: {} } },
 
-
                             } }
                     }, {
                         $project: {
@@ -296,8 +320,15 @@ var socketController = function () {
                             chatName: { $cond: { if: "$group", then: "$group", else: { $cond: { if: { $eq: ["$from._id", _mongoose2.default.Types.ObjectId(id)] }, then: "$to", else: "$from" } } } }
                         }
                     }, { $sort: { "date": -1 } }]).then(function (result) {
+
+                        result.map(function (value) {
+                            if (socketInfo.hasOwnProperty(value.chatName._id)) value.isOnline = true;else value.isOnline = false;
+                            return value;
+                        });
+
                         io.to(socket.id).emit('chatList', { success: _constant2.default.TRUE, chatList: result, message: _constant2.default.TRUEMSG });
                     }).catch(function (err) {
+                        console.log(err);
 
                         if (err) io.to(socket.id).emit('chatList', { success: _constant2.default.FALSE, message: err });
                     });
@@ -317,6 +348,59 @@ var socketController = function () {
                 });
             });
         }
+    }, {
+        key: 'activeUsers',
+        value: function activeUsers(socket, io, socketInfo) {
+
+            socket.on('activeUsers', function (data) {
+                var activeUsers = [];
+                for (var key in socketInfo) {
+                    activeUsers.push(key);
+                }
+
+                io.to(socket.id).emit('activeUsers', { success: _constant2.default.TRUE, activeUsers: activeUsers });
+            });
+        }
+    }, {
+        key: 'userOnline',
+        value: function userOnline(socket, io, socketInfo) {}
+
+        //online User
+
+    }, {
+        key: 'isOnline',
+        value: function isOnline(socket, io, socketInfo) {
+            socket.on('isOnline', function (data) {
+                console.log(data, 'isOnline');
+                if (!data.opponentId) {
+                    io.to(socket.id).emit('isOnline', { success: _constant2.default.FALSE, message: _constant2.default.OPPOMISSING });
+                } else {
+                    var isOnline;
+                    if (socketInfo.hasOwnProperty(data.opponentId)) isOnline = true;else isOnline = false;
+                    _user2.default.findById(data.opponentId).then(function (user) {
+                        var _io$to$emit;
+
+                        console.log(user);
+                        io.to(socket.id).emit('isOnline', (_io$to$emit = { isOnline: data.status }, _defineProperty(_io$to$emit, 'isOnline', isOnline), _defineProperty(_io$to$emit, 'onlineTime', user.lastOnline), _io$to$emit));
+                    });
+                }
+            });
+        }
+    }, {
+        key: 'deleteMessage',
+        value: function deleteMessage(socket, io) {
+            socket.on('deleteMessage', function (data) {
+                if (!data.messageId) io.to(socket.id).emit('deleteMessage', { success: _constant2.default.FALSE, message: _constant2.default.MESSAGEDELETE });else {
+                    _message2.default.updateMany({
+                        _id: data.messageId
+                    }, { $set: { is_deleted: true } }).then(function (result) {
+                        if (result) io.to(socket.id).emit('deleteMessage', { success: _constant2.default.TRUE, message: _constant2.default.DELETEMSG });
+                    }).catch(function (error) {
+                        io.to(socket.id).emit('deleteMessage', { success: _constant2.default.FALSE, message: error });
+                    });
+                }
+            });
+        }
 
         // Change Read Status of messages
 
@@ -329,6 +413,19 @@ var socketController = function () {
                 if (!data.userId && !data.conversationId) io.to(socket.id).emit('isRead', { success: _constant2.default.FALSE, message: _constant2.default.PARAMSMISSING });else {
                     _message2.default.update({ conversationId: data.conversationId, readBy: { $ne: data.userId }, isBlocked: false }, { $push: { readBy: data.userId } }, { multi: true }).then(function (updateResult) {
                         if (data.messageType == 'group') io.in(data.groupId).emit('isRead', { success: _constant2.default.TRUE });else io.to(socketInfo[data.opponentId]).emit('isRead', { success: _constant2.default.TRUE });
+                    });
+                }
+            });
+        }
+    }, {
+        key: 'addOnlineTime',
+        value: function addOnlineTime(userId) {
+            return new Promise(function (resolve, reject) {
+                if (userId) {
+                    _user2.default.findByIdAndUpdate(userId, { lastOnline: (0, _moment2.default)().valueOf() }, { new: true }).then(function (result) {
+                        resolve(result);
+                    }).catch(function (err) {
+                        return console.log(err);
                     });
                 }
             });

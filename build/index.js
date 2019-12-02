@@ -34,7 +34,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 dotenv.config();
-app.use(_express2.default.static(_path2.default.join(process.cwd() + "/public/")));
+app.use(_express2.default.static(_path2.default.join(process.cwd() + "/public/uploads/")));
 app.use(function (req, res, next) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Credentials", true);

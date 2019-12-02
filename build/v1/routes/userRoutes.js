@@ -61,7 +61,7 @@ var storage = _multer2.default.diskStorage({
 var upload = (0, _multer2.default)({ storage: storage }).single('file');
 
 // Register User
-userRoutes.route('/register').post([auth, upload], function (req, res) {
+userRoutes.route('/register').post([upload], function (req, res) {
 
     userRepo.register(req.body, req.file).then(function (result) {
 
@@ -91,6 +91,32 @@ userRoutes.route('/deleteUser/:id').get(function (req, res) {
 
         return res.json({
             success: _constant2.default.TRUE, message: _constant2.default.TRUEMSG, user: result
+        });
+    }).catch(function (error) {
+        console.log(error);
+
+        return res.json({ success: _constant2.default.FALSE, message: error });
+    });
+});
+
+userRoutes.route('/updateProfilePic').put(function (req, res) {
+    userRepo.updateProfilePic(req.body).then(function (result) {
+
+        return res.json({
+            success: _constant2.default.TRUE, message: _constant2.default.UPDATEMSG, user: result
+        });
+    }).catch(function (error) {
+        console.log(error);
+
+        return res.json({ success: _constant2.default.FALSE, message: error });
+    });
+});
+
+userRoutes.route('/updateDeviceId').put(function (req, res) {
+    userRepo.updateDeviceId(req.body).then(function (result) {
+
+        return res.json({
+            success: _constant2.default.TRUE, message: _constant2.default.UPDATEMSG, user: result
         });
     }).catch(function (error) {
         console.log(error);
