@@ -33,7 +33,7 @@
     "mongoose": "^5.6.11",
     "multer": "^1.4.2",
     "random-number": "0.0.9",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.5.0",
     "tough-cookie": "^3.0.1"
   }
 }
